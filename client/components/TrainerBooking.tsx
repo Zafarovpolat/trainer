@@ -36,7 +36,7 @@ export default function TrainerBooking() {
   const [locations, setLocations] = useState<LocationOption[]>([
     { id: '1', name: 'World Class', address: 'г.Москва, ул. Тверская 32', selected: true },
     { id: '2', name: 'Зебра', address: 'г.Москва, ул. Школьная 21', selected: false },
-    { id: '3', name: 'DDX', address: 'г.Москва, у��. Школьная 21', selected: false },
+    { id: '3', name: 'DDX', address: 'г.Москва, ул. Школьная 21', selected: false },
     { id: '4', name: 'World Class', address: 'г.Москва, ул. Школьная 21', selected: false },
   ]);
 
@@ -181,12 +181,12 @@ export default function TrainerBooking() {
 }
 
 // Services Section Component
-function ServicesSection({ services, onToggleService }: { 
-  services: ServiceOption[], 
-  onToggleService: (id: string) => void 
+function ServicesSection({ services, onToggleService }: {
+  services: ServiceOption[],
+  onToggleService: (id: string) => void
 }) {
   return (
-    <Card className="p-15 rounded-3xl bg-background-secondary border-0 shadow-sm">
+    <Card className="p-10 lg:p-16 rounded-[40px] bg-background-secondary border-0 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-8 mb-10">
         <svg width="58" height="58" viewBox="0 0 58 58" fill="none" className="flex-shrink-0">
@@ -340,7 +340,7 @@ function DateTimeSection({
   onSelectDate: (date: number) => void,
   onSelectTimeSlot: (id: string) => void
 }) {
-  const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'П��', 'Сб', 'Вс'];
+  const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const dates = [31, 1, 2, 3, 4, 5, 6];
 
   return (
