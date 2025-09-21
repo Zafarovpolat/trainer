@@ -36,7 +36,7 @@ export default function TrainerBooking() {
   const [locations, setLocations] = useState<LocationOption[]>([
     { id: '1', name: 'World Class', address: 'г.Москва, ул. Тверская 32', selected: true },
     { id: '2', name: 'Зебра', address: 'г.Москва, ул. Школьная 21', selected: false },
-    { id: '3', name: 'DDX', address: 'г.Москва, ул. Школьная 21', selected: false },
+    { id: '3', name: 'DDX', address: 'г.Москва, у��. Школьная 21', selected: false },
     { id: '4', name: 'World Class', address: 'г.Москва, ул. Школьная 21', selected: false },
   ]);
 
@@ -151,7 +151,7 @@ export default function TrainerBooking() {
       </div>
 
       {/* Main content sections */}
-      <div className="max-w-4xl mx-auto px-4 lg:px-8 space-y-8 -mt-20 relative z-10">
+      <div className="max-w-4xl mx-auto px-6 lg:px-8 space-y-8 -mt-20 relative z-10">
         {/* Services Section */}
         <ServicesSection services={services} onToggleService={toggleService} />
         
@@ -340,7 +340,7 @@ function DateTimeSection({
   onSelectDate: (date: number) => void,
   onSelectTimeSlot: (id: string) => void
 }) {
-  const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'П��', 'Сб', 'Вс'];
   const dates = [31, 1, 2, 3, 4, 5, 6];
 
   return (
