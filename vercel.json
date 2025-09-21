@@ -3,19 +3,20 @@
     "buildCommand": "npm run vercel-build",
     "outputDirectory": "dist/spa",
     "framework": null,
-    "functions": {
-        "server/node-build.ts": {
-            "runtime": "nodejs22.x"
-        }
-    },
-    "rewrites": [
+    "builds": [
         {
-            "source": "/api/(.*)",
-            "destination": "/server/node-build.ts"
+            "src": "server/node-build.ts",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/server/node-build.ts"
         },
         {
-            "source": "/(.*)",
-            "destination": "/index.html"
+            "src": "/(.*)",
+            "dest": "/$1"
         }
     ]
 }
