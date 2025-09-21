@@ -128,10 +128,10 @@ export default function TrainerBooking() {
         </div>
 
         {/* Trainer info */}
-        <div className="absolute bottom-20 left-8 lg:left-20 flex items-center gap-8">
+        <div className="absolute bottom-20 left-8 lg:left-80 flex items-center gap-8">
           {/* Profile picture */}
-          <div className="w-42 h-42 rounded-full overflow-hidden flex-shrink-0">
-            <img 
+          <div className="w-[168px] h-[168px] rounded-full overflow-hidden flex-shrink-0">
+            <img
               src="https://api.builder.io/api/v1/image/assets/TEMP/d9b62a20c720da0c271ee07e8d57b547884a3da7?width=336"
               alt="Петров Александр"
               className="w-full h-full object-cover"
@@ -139,11 +139,11 @@ export default function TrainerBooking() {
           </div>
 
           {/* Trainer details */}
-          <div className="text-white">
-            <h1 className="text-4xl lg:text-5xl font-bold mb-2">
+          <div className="text-white font-sf-pro">
+            <h1 className="text-4xl lg:text-5xl font-bold mb-5 leading-tight">
               Петров Александр
             </h1>
-            <p className="text-2xl lg:text-3xl font-normal opacity-90">
+            <p className="text-2xl lg:text-3xl font-normal opacity-90 leading-tight">
               Персональный тренер
             </p>
           </div>
