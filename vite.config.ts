@@ -16,6 +16,15 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: "dist/spa",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@radix-ui/react-collapsible', '@radix-ui/react-card']
+        }
+      }
+    }
   },
   plugins: [react(), expressPlugin()],
   resolve: {

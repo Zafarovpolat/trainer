@@ -1,0 +1,21 @@
+{
+    "version": 2,
+    "buildCommand": "npm run vercel-build",
+    "outputDirectory": "dist/spa",
+    "framework": null,
+    "functions": {
+        "server/node-build.ts": {
+            "runtime": "nodejs22.x"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/server/node-build.ts"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}
