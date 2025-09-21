@@ -57,6 +57,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Custom Figma design colors
+        "content-primary": "hsl(var(--content-primary))",
+        "content-secondary": "hsl(var(--content-secondary))",
+        "content-tertiary": "hsl(var(--content-tertiary))",
+        "background-primary": "hsl(var(--background-primary))",
+        "background-secondary": "hsl(var(--background-secondary))",
+        "accent-primary": "hsl(var(--accent-primary))",
+        "accent-secondary": "hsl(var(--accent-secondary))",
+        "grays-white": "hsl(var(--grays-white))",
       },
       borderRadius: {
         lg: "var(--radius)",
