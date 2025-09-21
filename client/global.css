@@ -57,6 +57,16 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom Figma design colors */
+    --content-primary: 220 13% 11%;
+    --content-secondary: 225 13% 62%;
+    --content-tertiary: 220 14% 68%;
+    --background-primary: 220 43% 96%;
+    --background-secondary: 0 0% 100%;
+    --accent-primary: 218 94% 46%;
+    --accent-secondary: 218 100% 27%;
+    --grays-white: 0 0% 100%;
   }
 
   .dark {
