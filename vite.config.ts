@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
-          ui: ['@radix-ui/react-collapsible', '@radix-ui/react-card']
+          ui: ['@radix-ui/react-collapsible']
         }
       }
     }
