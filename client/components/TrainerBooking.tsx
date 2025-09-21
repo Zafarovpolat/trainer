@@ -34,7 +34,7 @@ export default function TrainerBooking() {
   ]);
 
   const [locations, setLocations] = useState<LocationOption[]>([
-    { id: '1', name: 'World Class', address: 'г.Москва, ул. Тверская 32', selected: true },
+    { id: '1', name: 'World Class', address: 'г.Москва, у��. Тверская 32', selected: true },
     { id: '2', name: 'Зебра', address: 'г.Москва, ул. Школьная 21', selected: false },
     { id: '3', name: 'DDX', address: 'г.Москва, ул. Школьная 21', selected: false },
     { id: '4', name: 'World Class', address: 'г.Москва, ул. Школьная 21', selected: false },
@@ -261,12 +261,12 @@ function ServiceItem({ service, onToggle }: {
 }
 
 // Location Section Component 
-function LocationSection({ locations, onSelectLocation }: { 
-  locations: LocationOption[], 
-  onSelectLocation: (id: string) => void 
+function LocationSection({ locations, onSelectLocation }: {
+  locations: LocationOption[],
+  onSelectLocation: (id: string) => void
 }) {
   return (
-    <Card className="p-15 rounded-3xl bg-background-secondary border-0 shadow-sm">
+    <Card className="p-10 lg:p-16 rounded-[40px] bg-background-secondary border-0 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-8 mb-10">
         <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
