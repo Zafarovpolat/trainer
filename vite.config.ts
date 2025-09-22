@@ -7,6 +7,12 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 3000,
+    proxy: {
+      '/widgets': {
+        target: 'https://coach-test.api.sofit.pw',
+        changeOrigin: true,
+      }
+    }
   },
   build: {
     outDir: "dist/spa",

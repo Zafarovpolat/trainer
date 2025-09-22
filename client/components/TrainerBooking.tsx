@@ -292,16 +292,32 @@ export default function TrainerBooking() {
   useEffect(() => {
     const fetchCoach = async () => {
       try {
-        const response = await fetch(
-          `https://coach-test.api.sofit.pw/widgets/coach?linkCode=${linkCode}`,
-        );
+        console.log('Fetching coach with linkCode:', linkCode);
+        const response = await fetch(`/widgets/coach?linkCode=${linkCode}`);
+
         if (!response.ok) {
-          throw new Error("Failed to fetch coach data");
+          const errorText = await response.text();
+          console.error('Coach fetch error:', response.status, errorText);
+          throw new Error(`Failed to fetch coach: ${errorText}`);
         }
+
         const coachData: Coach = await response.json();
+        console.log('Coach loaded successfully:', coachData);
+
+        // ПРОВЕРКА: Убедимся, что coach имеет linkCode
+        if (coachData.linkCode !== linkCode) {
+          console.warn('WARNING: Coach linkCode mismatch!', { expected: linkCode, actual: coachData.linkCode });
+        }
+
         setCoach(coachData);
       } catch (err) {
-        // Use fallback data when fetch fails
+        console.error('Coach fetch failed:', err);
+
+        // Fallback только если linkCode реальный, но API недоступен
+        if (linkCode === 'abc123') {
+          console.error('CRITICAL: Using fake linkCode=abc123! Get real one from URL or admin panel.');
+        }
+
         const fallbackCoach: Coach = {
           id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
           firstName: "Иванов",
@@ -318,7 +334,7 @@ export default function TrainerBooking() {
             isoCode: "RU",
           },
           scopeId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-          linkCode: "string",
+          linkCode: linkCode, // Используем переданный linkCode
         };
         setCoach(fallbackCoach);
       } finally {
@@ -333,7 +349,7 @@ export default function TrainerBooking() {
     const fetchLocations = async () => {
       try {
         const response = await fetch(
-          `https://coach-test.api.sofit.pw/widgets/locations?linkCode=${linkCode}&page=1&size=50`,
+          `/widgets/locations?linkCode=${linkCode}&page=1&size=50`,
         );
         if (!response.ok) {
           throw new Error("Failed to fetch locations data");
@@ -390,7 +406,7 @@ export default function TrainerBooking() {
     const fetchServices = async () => {
       try {
         const response = await fetch(
-          `https://coach-test.api.sofit.pw/widgets/services?linkCode=${linkCode}&page=1&size=50`,
+          `/widgets/services?linkCode=${linkCode}&page=1&size=50`,
         );
         if (!response.ok) {
           throw new Error("Failed to fetch services data");
@@ -471,44 +487,71 @@ export default function TrainerBooking() {
       // Try to fetch real data if we have all required parameters
       if (selectedLocationId && selectedServiceId && selectedDate) {
         try {
-          // selectedDate is already a date string in YYYY-MM-DD format
-          const dateFrom = selectedDate;
-          const dateTo = selectedDate;
+          // ИСПРАВЛЕНО: API ожидает ТОЛЬКО ДАТУ в формате YYYY-MM-DD
+          const dateFrom = selectedDate; // '2025-09-22'
+          const dateTo = selectedDate;   // '2025-09-22'
+
+          console.log('Free slots request:', { dateFrom, dateTo });
 
           const response = await fetch(
-            `https://coach-test.api.sofit.pw/widgets/free-slots?linkCode=${linkCode}&locationId=${selectedLocationId}&serviceId=${selectedServiceId}&dateFrom=${dateFrom}&dateTo=${dateTo}`,
-          );
-          if (response.ok) {
-            const freeSlotsData: FreeSlotsResponse = await response.json();
-
-            // Transform API data to TimeSlot format
-            const transformedSlots: TimeSlot[] = [];
-            freeSlotsData.schedule.forEach((day: ScheduleDay) => {
-              day.freeSlots.forEach((slotTime: string, index: number) => {
-                // Extract time from ISO string (e.g., "19:25:44.418Z" -> "19:25")
-                const timeMatch = slotTime.match(/^(\d{2}:\d{2})/);
-                const time = timeMatch ? timeMatch[1] : slotTime;
-                transformedSlots.push({
-                  id: `${day.date}-${index}`,
-                  time: time,
-                  available: true,
-                  selected: false,
-                });
-              });
-            });
-
-            // Use real data if we got it
-            if (transformedSlots.length > 0) {
-              setTimeSlots(transformedSlots);
-              return;
+            `/widgets/free-slots?linkCode=${linkCode}&locationId=${selectedLocationId}&serviceId=${selectedServiceId}&dateFrom=${dateFrom}&dateTo=${dateTo}`,
+            {
+              headers: {
+                'Content-Language': 'ru',
+              }
             }
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Free slots error:', response.status, errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+
+          const freeSlotsData = await response.json();
+          console.log('Free slots success:', freeSlotsData);
+
+          // Transform API data to TimeSlot format
+          const transformedSlots: TimeSlot[] = [];
+          if (freeSlotsData.schedule && Array.isArray(freeSlotsData.schedule)) {
+            freeSlotsData.schedule.forEach((day: any, dayIndex: number) => {
+              if (day.freeSlots && Array.isArray(day.freeSlots)) {
+                day.freeSlots.forEach((slotTime: any, index: number) => {
+                  // Extract time from slot (строка или объект)
+                  let time = '';
+                  if (typeof slotTime === 'string') {
+                    const timeMatch = slotTime.match(/^(\d{2}:\d{2})/);
+                    time = timeMatch ? timeMatch[1] : slotTime;
+                  } else if (typeof slotTime === 'object' && slotTime.startTime) {
+                    time = slotTime.startTime;
+                  } else {
+                    time = '10:00'; // fallback
+                  }
+
+                  transformedSlots.push({
+                    id: `${day.date || selectedDate}-${time}-${index}`,
+                    time: time,
+                    available: true,
+                    selected: false,
+                  });
+                });
+              }
+            });
+          }
+
+          // Use real data if we got it
+          if (transformedSlots.length > 0) {
+            console.log('Using real slots:', transformedSlots);
+            setTimeSlots(transformedSlots);
+            return;
           }
         } catch (err) {
-          // Fall through to use fallback data
+          console.error('Free slots fetch error:', err);
         }
       }
 
       // Use fallback data
+      console.log('Using fallback slots');
       setTimeSlots(fallbackSlots);
     };
 
@@ -524,7 +567,7 @@ export default function TrainerBooking() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background-primary flex items-center justify-center">
-        <div className="text-white text-xl">Загрузка...</div>
+        <div className="text-black text-xl">Загрузка...</div>
       </div>
     );
   }
@@ -546,12 +589,12 @@ export default function TrainerBooking() {
 
             {/* Background decorative images */}
             <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/6950c77076262eff289e7765c5edd76f498dd95c?width=1440"
+              src="./left.png"
               alt=""
               className="absolute transform -left-[40px] -top-[20px] xl:top-0 xl:left-0 w-[210px] h-[280px] xl:w-[475px] xl:h-[580px]"
             />
             <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/7ac386323568972b52e277a7a368bbd00c9cb449?width=1200"
+              src="./right.png"
               alt=""
               className="absolute -top-[30px] xl:top-2 object-contain -right-[50px] xl:right-0 w-[180px] h-[280px] xl:w-[424px] xl:h-[580px]"
             />
@@ -621,7 +664,7 @@ export default function TrainerBooking() {
                   <img
                     src={
                       coach?.photo ||
-                      "https://api.builder.io/api/v1/image/assets/TEMP/d9b62a20c720da0c271ee07e8d57b547884a3da7?width=336"
+                      "./avatar.png"
                     }
                     alt={
                       coach ? `${coach.firstName} ${coach.lastName}` : "Тренер"
@@ -772,7 +815,39 @@ export default function TrainerBooking() {
                 type="tel"
                 placeholder="+79999999999"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                maxLength={12}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow only digits and + at the beginning
+                  const filteredValue = value.replace(/[^\d+]/g, '');
+
+                  // If the value is empty, allow it
+                  if (!filteredValue) {
+                    setPhone('');
+                    return;
+                  }
+
+                  // If starts with +7, keep +7 and only digits after
+                  if (filteredValue.startsWith('+7')) {
+                    const afterPlus7 = filteredValue.substring(2).replace(/[^\d]/g, '');
+                    setPhone('+7' + afterPlus7);
+                  }
+                  // If starts with + but not +7, allow it (user might be typing +7)
+                  else if (filteredValue.startsWith('+')) {
+                    // Keep the + and only digits after
+                    const afterPlus = filteredValue.substring(1).replace(/[^\d]/g, '');
+                    setPhone('+' + afterPlus);
+                  }
+                  // If starts with digits and no +, add +7
+                  else if (/^\d/.test(filteredValue)) {
+                    const digitsOnly = filteredValue.replace(/\+/g, '');
+                    setPhone('+7' + digitsOnly);
+                  }
+                  // Otherwise, keep as is (shouldn't happen with our filtering)
+                  else {
+                    setPhone(filteredValue);
+                  }
+                }}
                 className="bg-[#F6F7FA] w-full xl:h-[134px] h-[56px] xl:text-[32px] text-[16px] xl:px-8 px-6 rounded-[16px] xl:rounded-[40px] focus:border-accent-primary"
               />
             </div>
@@ -780,34 +855,84 @@ export default function TrainerBooking() {
             {/* Continue Button */}
             <div className="xl:mt-12 mt-8">
               <Button
-                className="w-full xl:h-[116px] h-[48px] xl:text-[32px] text-[16px] font-semibold rounded-[16px] xl:rounded-[40px] bg-accent-primary hover:bg-accent-secondary"
+                className="w-full xl:h-[116px] h-[48px] xl:text-[32px] text-[16px] font-semibold rounded-[16px] xl:rounded-[40px] bg-accent-primary hover:bg-accent-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                 size="lg"
+                disabled={phone.length < 12}
                 onClick={async () => {
-                  if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
+                  if (phone.length < 12) {
                     setShowErrorScreen(true);
                     return;
                   }
 
-                  // Find selected location, service, and time slot
-                  const selectedLocation = locations.find(
-                    (loc) => loc.selected,
-                  );
-                  const selectedService = services.find((svc) => svc.selected);
-                  const selectedTimeSlot = timeSlots.find(
-                    (slot) => slot.selected,
-                  );
+                  // НАЙДИТЕ ВЫБРАННЫЕ ЭЛЕМЕНТЫ
+                  const selectedLocation = locations.find(loc => loc.selected);
+                  const selectedService = services.find(svc => svc.selected);
+                  const selectedTimeSlot = timeSlots.find(slot => slot.selected);
 
-                  if (
-                    !selectedLocation ||
-                    !selectedService ||
-                    !selectedTimeSlot
-                  ) {
+                  if (!selectedLocation || !selectedService || !selectedTimeSlot) {
+                    alert('Выберите локацию, услугу и время');
                     setShowErrorScreen(true);
                     return;
                   }
 
-                  // Skip real API call and show success directly for testing
-                  setShowSuccessScreen(true);
+                  // ПРОВЕРИТЕ selectedSlotId
+                  const selectedSlot = timeSlots.find(slot => slot.id === selectedTimeSlotId);
+                  if (!selectedSlot) {
+                    alert('Выберите время');
+                    return;
+                  }
+
+                  // ФОРМИРУЕМ ПОЛНУЮ ДАТУ-ВРЕМЯ
+                  const fullDateTime = new Date(`${selectedDate}T${selectedSlot.time}:00.000Z`).toISOString();
+
+                  // ПАРСИМ duration И price ИЗ ВЫБРАННОЙ УСЛУГИ
+                  const duration = parseInt(selectedService.duration.replace(/ мин$/, '')) || 60;
+                  const price = parseInt(selectedService.price.replace(/[₽\s]/g, '')) || 0;
+
+                  // ПОЛНЫЙ REQUEST BODY
+                  const requestBody = {
+                    locationId: selectedLocation.id,        // ← ДОБАВИЛИ
+                    serviceId: selectedService.id,          // ← ДОБАВИЛИ  
+                    date: fullDateTime,
+                    trType: 5,                              // ← ДОБАВИЛИ (personal training)
+                    duration: duration,
+                    price: price,
+                    phone: phone,                           // Уже есть
+                  };
+
+                  console.log('Request body:', requestBody); // Дебаг
+
+                  try {
+                    const response = await fetch('/widgets/service-request', { // ← ИСПРАВИЛИ: добавили "s"
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Language': 'ru',
+                      },
+                      body: JSON.stringify(requestBody),
+                    });
+
+                    if (!response.ok) {
+                      const errorText = await response.text();
+                      console.error('Booking error:', response.status, errorText);
+                      throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('Booking success:', data);
+                    setShowSuccessScreen(true);
+
+                    // Сброс формы
+                    setFirstName('');
+                    setLastName('');
+                    setPhone('');
+                    setSelectedLocationId('');
+                    setSelectedServiceId('');
+                    setSelectedTimeSlotId('');
+                  } catch (err) {
+                    console.error('Error submitting booking:', err);
+                    setShowErrorScreen(true);
+                  }
                 }}
               >
                 Далее
@@ -820,7 +945,7 @@ export default function TrainerBooking() {
         <div className="min-h-screen bg-white flex items-center justify-center xl:p-8 p-4">
           <div className="max-w-[823px] w-full">
             {/* Success Icon */}
-            <div className="flex justify-center xl:mb-8 mb-6">
+            <div className="flex justify-center xl:mb-8 mb-6 pt-4 xl:pt-8">
               <svg
                 className="xl:w-[240px] w-[120px] xl:h-[241px] h-[121px]"
                 width="240"
@@ -1099,12 +1224,12 @@ function ServicesSection({
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card
         className={
-          "xl:px-10 p-6 xl:py-[60px] rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
+          " rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
         }
       >
         {/* Header */}
         <CollapsibleTrigger asChild>
-          <div className="flex items-center gap-[12px] xl:gap-8 cursor-pointer">
+          <div className={`flex items-center gap-[12px] xl:gap-8 cursor-pointer xl:px-10 p-6 xl:pt-[60px] xl:pb-[60px] ${isOpen ? "xl:pb-0 pb-0" : "pb-6 xl:pb-[60px"}`}>
             <svg
               className="xl:w-[58px] w-[24px] xl:h-[58px] h-[24px]"
               width="58"
@@ -1146,10 +1271,10 @@ function ServicesSection({
 
         <CollapsibleContent>
           {/* Service options */}
-          <div className="space-y-2 xl:space-y-3 mt-4 xl:mt-10">
+          <div className="space-y-2 xl:mt-10 mt-4 xl:space-y-3 xl:px-10 px-6 pb-6 xl:pb-[60px]">
             {services.map((service, index) => (
               <div key={service.id}>
-                <div className="h-0.5 bg-gray-100 my-2 xl:my-5" />
+                <div className="h-0.5 bg-gray-100 " />
                 <ServiceItem
                   service={service}
                   onToggle={() => onToggleService(service.id)}
@@ -1172,13 +1297,12 @@ function ServiceItem({
   onToggle: () => void;
 }) {
   return (
-    <div className="space-y-[2px] xl:space-y-2">
+    <div className={`space-y-[2px] xl:space-y-2 xl:py-5 py-2 hover:cursor-pointer`} onClick={onToggle}>
       <div className="flex items-center justify-between">
         <h3 className="xl:text-3xl text-[16px] font-medium text-content-primary flex-1">
           {service.name}
         </h3>
         <button
-          onClick={onToggle}
           className="xl:w-12 w-5 h-5 xl:h-12 rounded-full flex-shrink-0"
         >
           {service.selected ? (
@@ -1257,11 +1381,11 @@ function LocationSection({
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card
         className={
-          "xl:px-10 p-6 xl:py-[60px] rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
+          " rounded-[18px] xl:rounded-[40px] overflow-hidden border-0  bg-background-secondary shadow-sm"
         }
       >
         <CollapsibleTrigger asChild>
-          <div className="flex items-center gap-[12px] xl:gap-8 cursor-pointer">
+          <div className={`flex items-center gap-[12px] xl:gap-8 cursor-pointer xl:px-10 p-6 xl:pt-[60px] ${isOpen ? 'pb-0' : 'pb-[24px] xl:pb-[60px]'}`}>
             <svg
               className="xl:w-[56px] w-[24px] xl:h-[56px] h-[24px]"
               width="56"
@@ -1309,10 +1433,10 @@ function LocationSection({
 
         <CollapsibleContent>
           {/* Location options */}
-          <div className="xl:space-y-5 mt-4 xl:mt-10">
+          <div className="xl:space-y-5 mt-4 xl:mt-10 xl:px-10 px-6 pb-6 xl:pb-[60px]">
             {locations.map((location, index) => (
               <div key={location.id}>
-                <div className="h-0.5 bg-gray-100 my-2 xl:my-5" />
+                <div className="h-0.5 bg-gray-100" />
                 <LocationItem
                   location={location}
                   onSelect={() => onSelectLocation(location.id)}
@@ -1335,13 +1459,12 @@ function LocationItem({
   onSelect: () => void;
 }) {
   return (
-    <div className="space-y-[2px] xl:space-y-2">
+    <div className="space-y-[2px] xl:space-y-2 py-2 xl:py-5 hover:cursor-pointer" onClick={onSelect}>
       <div className="flex items-center justify-between">
         <h3 className="xl:text-3xl text-[16px] font-medium text-content-primary flex-1">
           {location.name}
         </h3>
         <button
-          onClick={onSelect}
           className="xl:w-12 w-5 h-5 xl:h-12 rounded-full flex-shrink-0"
         >
           {location.selected ? (
@@ -1464,12 +1587,12 @@ function DateTimeSection({
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card
         className={
-          "xl:px-10 p-6 xl:py-[60px] rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
+          " rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
         }
       >
         {/* Header */}
         <CollapsibleTrigger asChild>
-          <div className="flex items-center gap-[12px] xl:gap-8 cursor-pointer">
+          <div className={`flex items-center gap-[12px] xl:gap-8 cursor-pointer xl:px-10 p-6 xl:py-[60px] ${isOpen ? "xl:pb-0 pb-0" : "xl:pb-[60px]"}`}>
             <svg
               className="xl:w-[56px] w-[24px] xl:h-[56px] h-[24px]"
               width="56"
@@ -1510,7 +1633,7 @@ function DateTimeSection({
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="xl:space-y-5 space-y-3 xl:mt-10">
+          <div className="xl:space-y-5 space-y-3 xl:mt-10 xl:px-10 px-6 xl:pb-[60px] pb-6">
             <div className="h-0.5 bg-gray-300 mt-6 xl:my-8" />
 
             {/* Calendar */}
@@ -1580,15 +1703,14 @@ function DateTimeSection({
                             .split("T")[0],
                         )
                       }
-                      className={`xl:w-20 w-8 xl:h-20 h-8 rounded-full xl:text-[48px] text-[20px] font-medium transition-colors ${
-                        selectedDate ===
+                      className={`xl:w-20 w-8 xl:h-20 h-8 rounded-full xl:text-[48px] text-[20px] font-medium transition-colors ${selectedDate ===
                         weekDaysData[index].fullDate.toISOString().split("T")[0]
-                          ? "bg-accent-primary text-white"
-                          : weekDaysData[index].fullDate.toDateString() ===
-                              today.toDateString()
-                            ? "bg-accent-secondary text-white"
-                            : "text-content-primary hover:bg-gray-100"
-                      }`}
+                        ? "bg-accent-primary text-white"
+                        : weekDaysData[index].fullDate.toDateString() ===
+                          today.toDateString()
+                          ? "bg-accent-secondary text-white"
+                          : "text-content-primary hover:bg-gray-100"
+                        }`}
                     >
                       {weekDaysData[index].date}
                     </button>
@@ -1610,13 +1732,12 @@ function DateTimeSection({
                         key={slot.id}
                         onClick={() => onSelectTimeSlot(slot.id)}
                         disabled={!slot.available}
-                        className={`xl:px-10  h-[36px] xl:py-[18px] sm:h-[50px] xl:h-[90px] rounded-full xl:text-[32px] text-[16px] font-medium transition-colors ${
-                          slot.selected
-                            ? "bg-accent-primary text-white"
-                            : slot.available
-                              ? "bg-white border border-gray-200 text-content-secondary hover:bg-gray-50"
-                              : "bg-white border border-gray-200 text-content-secondary opacity-50 cursor-not-allowed"
-                        }`}
+                        className={`xl:px-10  h-[36px] xl:py-[18px] sm:h-[50px] xl:h-[90px] rounded-full xl:text-[32px] text-[16px] font-medium transition-colors ${slot.selected
+                          ? "bg-accent-primary text-white"
+                          : slot.available
+                            ? "bg-white border border-gray-200 text-content-secondary hover:bg-gray-50"
+                            : "bg-white border border-gray-200 text-content-secondary opacity-50 cursor-not-allowed"
+                          }`}
                       >
                         {slot.time}
                       </button>
