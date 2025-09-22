@@ -1,17 +1,35 @@
+// server/node-build.ts
+import express from "express";
+import cors from "cors";
 import serverless from "serverless-http";
-import { createServer } from "./index";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const app = createServer();
+// ВАЖНО: Импортируйте из правильного места
+import { createServer } from "./index.js"; // или './server.js' в зависимости от структуры
 
-// For Vercel deployment, export the serverless function
-export default serverless(app);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// For local development, you can still run the server
-if (import.meta.main) {
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log(`🚀 Fusion Starter server running on port ${port}`);
-    console.log(`📱 Frontend: http://localhost:${port}`);
-    console.log(`🔧 API: http://localhost:${port}/api`);
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// API routes
+const serverApp = createServer();
+app.use("/api", serverApp);
+
+// Для Vercel serverless
+export const handler = serverless(app);
+
+// Для локального запуска
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
+
+export default app;

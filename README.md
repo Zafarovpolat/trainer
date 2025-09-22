@@ -71,3 +71,4 @@ PING_MESSAGE=ping pong
 ├── public/          # Static assets
 ├── dist/            # Build output
 └── vercel.json      # Vercel configuration
+```

@@ -1,30 +1,30 @@
 {
-    "version": 2,
-    "buildCommand": "pnpm run vercel-build",
-    "outputDirectory": "dist/spa",
-    "framework": null,
-    "builds": [
-        {
-            "src": "server/node-build.ts",
-            "use": "@vercel/node"
-        },
-        {
-            "src": "dist/spa/**",
-            "use": "@vercel/static"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/server/node-build.ts"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/dist/spa/$1"
-        },
-        {
-            "src": "/index.html",
-            "dest": "/dist/spa/index.html"
-        }
-    ]
+  "version": 2,
+  "buildCommand": "pnpm run vercel-build",
+  "outputDirectory": "dist/spa",
+  "functions": {
+    "dist/server/node-build.mjs": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/dist/server/node-build.mjs"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/dist/server/node-build.mjs"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
