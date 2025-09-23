@@ -44,10 +44,11 @@ interface TimeSlot {
 
 export default function TrainerBooking() {
   const [searchParams] = useSearchParams();
-  const linkCode = searchParams.get("linkCode") || "abc123"; // Default for testing
+  const linkCode = searchParams.get("linkCode") || '676767'
 
   const [coach, setCoach] = useState<Coach | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
@@ -194,63 +195,9 @@ export default function TrainerBooking() {
     },
   ];
 
-  const [services, setServices] = useState<ServiceOption[]>([
-    {
-      id: "1",
-      name: "Инструктаж в тренажёрном зале",
-      duration: "30 мин",
-      price: "3 000",
-      selected: false,
-    },
-    {
-      id: "2",
-      name: "Инструктаж в тренажёрном зале",
-      duration: "30 мин",
-      price: "3 000",
-      selected: false,
-    },
-    {
-      id: "3",
-      name: "Инструктаж в тренажёрном зале",
-      duration: "30 мин",
-      price: "3 000",
-      selected: false,
-    },
-    {
-      id: "4",
-      name: "Инструктаж в тренажёрном зале",
-      duration: "30 мин",
-      price: "3 000",
-      selected: false,
-    },
-  ]);
+  const [services, setServices] = useState<ServiceOption[]>([]);
 
-  const [locations, setLocations] = useState<LocationOption[]>([
-    {
-      id: "1",
-      name: "World Class",
-      address: "г.Москва, ул. Тверская 32",
-      selected: false,
-    },
-    {
-      id: "2",
-      name: "Зебра",
-      address: "г.Москва, ул. Школьная 21",
-      selected: false,
-    },
-    {
-      id: "3",
-      name: "DDX",
-      address: "г.Москва, ул. Школьная 21",
-      selected: false,
-    },
-    {
-      id: "4",
-      name: "World Class",
-      address: "г.Москва, ул. Школьная 21",
-      selected: false,
-    },
-  ]);
+  const [locations, setLocations] = useState<LocationOption[]>([]);
 
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = new Date();
@@ -290,6 +237,14 @@ export default function TrainerBooking() {
   };
 
   useEffect(() => {
+
+    if (!linkCode) {
+      setErrorMessage("Отсутствует код ссылки для тренера");
+      setLoading(false);
+      setShowErrorScreen(true);
+      return;
+    }
+
     const fetchCoach = async () => {
       try {
         console.log('Fetching coach with linkCode:', linkCode);
@@ -304,39 +259,12 @@ export default function TrainerBooking() {
         const coachData: Coach = await response.json();
         console.log('Coach loaded successfully:', coachData);
 
-        // ПРОВЕРКА: Убедимся, что coach имеет linkCode
-        if (coachData.linkCode !== linkCode) {
-          console.warn('WARNING: Coach linkCode mismatch!', { expected: linkCode, actual: coachData.linkCode });
-        }
-
         setCoach(coachData);
       } catch (err) {
         console.error('Coach fetch failed:', err);
+        setErrorMessage("Тренер не найден. Проверьте ссылку.");
+        setShowErrorScreen(true);
 
-        // Fallback только если linkCode реальный, но API недоступен
-        if (linkCode === 'abc123') {
-          console.error('CRITICAL: Using fake linkCode=abc123! Get real one from URL or admin panel.');
-        }
-
-        const fallbackCoach: Coach = {
-          id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-          firstName: "Иванов",
-          lastName: "Иван",
-          patronymic: "",
-          photo: "",
-          gender: 0,
-          birthday: 0,
-          language: "ru",
-          timezone: "string",
-          phoneData: {
-            countryCode: "7",
-            number: "276664473",
-            isoCode: "RU",
-          },
-          scopeId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-          linkCode: linkCode, // Используем переданный linkCode
-        };
-        setCoach(fallbackCoach);
       } finally {
         setLoading(false);
       }
@@ -346,6 +274,9 @@ export default function TrainerBooking() {
   }, [linkCode]);
 
   useEffect(() => {
+
+    if (!linkCode || errorMessage) return;
+
     const fetchLocations = async () => {
       try {
         const response = await fetch(
@@ -368,41 +299,17 @@ export default function TrainerBooking() {
         );
         setLocations(transformedLocations);
       } catch (err) {
-        // Use fallback data when fetch fails
-        const fallbackLocations: LocationOption[] = [
-          {
-            id: "fallback-1",
-            name: "World Class",
-            address: "г.Москва, ул. Тверская 32",
-            selected: false,
-          },
-          {
-            id: "fallback-2",
-            name: "Зебра",
-            address: "г.Москва, ул. Школьная 21",
-            selected: false,
-          },
-          {
-            id: "fallback-3",
-            name: "DDX",
-            address: "г.Москва, ул. Школьная 21",
-            selected: false,
-          },
-          {
-            id: "fallback-4",
-            name: "World Class",
-            address: "г.Москва, ул. Школьная 21",
-            selected: false,
-          },
-        ];
-        setLocations(fallbackLocations);
+        setErrorMessage("Ошибка загрузки локаций");
       }
     };
 
     fetchLocations();
-  }, [linkCode]);
+  }, [linkCode, errorMessage]);
 
   useEffect(() => {
+
+    if (!linkCode || errorMessage) return;
+
     const fetchServices = async () => {
       try {
         const response = await fetch(
@@ -424,139 +331,74 @@ export default function TrainerBooking() {
         );
         setServices(transformedServices);
       } catch (err) {
-        // Use fallback data when fetch fails
-        const fallbackServices: ServiceOption[] = [
-          {
-            id: "fallback-1",
-            name: "Инструктаж в тренажёрном зале",
-            duration: "30 мин",
-            price: "3 000 ₽",
-            selected: false,
-          },
-          {
-            id: "fallback-2",
-            name: "Персональная тренировка",
-            duration: "60 мин",
-            price: "5 000 ₽",
-            selected: false,
-          },
-          {
-            id: "fallback-3",
-            name: "Групповая тренировка",
-            duration: "45 мин",
-            price: "2 000 ₽",
-            selected: false,
-          },
-          {
-            id: "fallback-4",
-            name: "Консультация тренера",
-            duration: "30 мин",
-            price: "2 500 ₽",
-            selected: false,
-          },
-        ];
-        setServices(fallbackServices);
+        console.error('Services fetch failed:', err);
+        setErrorMessage("Ошибка загрузки услуг");
       }
     };
 
     fetchServices();
-  }, [linkCode]);
+  }, [linkCode, errorMessage]);
 
   useEffect(() => {
+    if (!linkCode || errorMessage || !selectedLocationId || !selectedServiceId || !selectedDate) return;
+
     const fetchFreeSlots = async () => {
-      // Always show time slots - use fallback data as default
-      const fallbackSlots: TimeSlot[] = [
-        { id: "fallback-1", time: "9:00", available: false, selected: false },
-        { id: "fallback-2", time: "9:30", available: false, selected: false },
-        { id: "fallback-3", time: "10:00", available: true, selected: false },
-        { id: "fallback-4", time: "10:30", available: true, selected: false },
-        { id: "fallback-5", time: "11:00", available: true, selected: false },
-        { id: "fallback-6", time: "11:30", available: true, selected: false },
-        { id: "fallback-7", time: "12:00", available: true, selected: false },
-        { id: "fallback-8", time: "12:30", available: true, selected: false },
-        { id: "fallback-9", time: "13:00", available: true, selected: false },
-        { id: "fallback-10", time: "13:30", available: true, selected: false },
-        { id: "fallback-11", time: "14:00", available: true, selected: false },
-        { id: "fallback-12", time: "14:30", available: true, selected: false },
-        { id: "fallback-13", time: "15:00", available: true, selected: false },
-        { id: "fallback-14", time: "15:30", available: true, selected: false },
-        { id: "fallback-15", time: "15:00", available: true, selected: false },
-        { id: "fallback-16", time: "15:30", available: true, selected: false },
-      ];
+      try {
+        const dateFrom = selectedDate;
+        const dateTo = selectedDate;
 
-      // Try to fetch real data if we have all required parameters
-      if (selectedLocationId && selectedServiceId && selectedDate) {
-        try {
-          // ИСПРАВЛЕНО: API ожидает ТОЛЬКО ДАТУ в формате YYYY-MM-DD
-          const dateFrom = selectedDate; // '2025-09-22'
-          const dateTo = selectedDate;   // '2025-09-22'
-
-          console.log('Free slots request:', { dateFrom, dateTo });
-
-          const response = await fetch(
-            `/widgets/free-slots?linkCode=${linkCode}&locationId=${selectedLocationId}&serviceId=${selectedServiceId}&dateFrom=${dateFrom}&dateTo=${dateTo}`,
-            {
-              headers: {
-                'Content-Language': 'ru',
-              }
+        const response = await fetch(
+          `/widgets/free-slots?linkCode=${linkCode}&locationId=${selectedLocationId}&serviceId=${selectedServiceId}&dateFrom=${dateFrom}&dateTo=${dateTo}`,
+          {
+            headers: {
+              'Content-Language': 'ru',
             }
-          );
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Free slots error:', response.status, errorText);
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
           }
+        );
 
-          const freeSlotsData = await response.json();
-          console.log('Free slots success:', freeSlotsData);
-
-          // Transform API data to TimeSlot format
-          const transformedSlots: TimeSlot[] = [];
-          if (freeSlotsData.schedule && Array.isArray(freeSlotsData.schedule)) {
-            freeSlotsData.schedule.forEach((day: any, dayIndex: number) => {
-              if (day.freeSlots && Array.isArray(day.freeSlots)) {
-                day.freeSlots.forEach((slotTime: any, index: number) => {
-                  // Extract time from slot (строка или объект)
-                  let time = '';
-                  if (typeof slotTime === 'string') {
-                    const timeMatch = slotTime.match(/^(\d{2}:\d{2})/);
-                    time = timeMatch ? timeMatch[1] : slotTime;
-                  } else if (typeof slotTime === 'object' && slotTime.startTime) {
-                    time = slotTime.startTime;
-                  } else {
-                    time = '10:00'; // fallback
-                  }
-
-                  transformedSlots.push({
-                    id: `${day.date || selectedDate}-${time}-${index}`,
-                    time: time,
-                    available: true,
-                    selected: false,
-                  });
-                });
-              }
-            });
-          }
-
-          // Use real data if we got it
-          if (transformedSlots.length > 0) {
-            console.log('Using real slots:', transformedSlots);
-            setTimeSlots(transformedSlots);
-            return;
-          }
-        } catch (err) {
-          console.error('Free slots fetch error:', err);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `HTTP ${response.status}`);
         }
-      }
 
-      // Use fallback data
-      console.log('Using fallback slots');
-      setTimeSlots(fallbackSlots);
+        const freeSlotsData = await response.json();
+
+        const transformedSlots: TimeSlot[] = [];
+        if (freeSlotsData.schedule && Array.isArray(freeSlotsData.schedule)) {
+          freeSlotsData.schedule.forEach((day: any, dayIndex: number) => {
+            if (day.freeSlots && Array.isArray(day.freeSlots)) {
+              day.freeSlots.forEach((slotTime: any, index: number) => {
+                let time = '';
+                if (typeof slotTime === 'string') {
+                  const timeMatch = slotTime.match(/^(\d{2}:\d{2})/);
+                  time = timeMatch ? timeMatch[1] : slotTime;
+                } else if (typeof slotTime === 'object' && slotTime.startTime) {
+                  time = slotTime.startTime;
+                } else {
+                  time = '10:00'; // Минимальный fallback, если слот пустой
+                }
+
+                transformedSlots.push({
+                  id: `${day.date || selectedDate}-${time}-${index}`,
+                  time: time,
+                  available: true,
+                  selected: false,
+                });
+              });
+            }
+          });
+        }
+
+        setTimeSlots(transformedSlots.length > 0 ? transformedSlots : []); // Если пусто — пустой массив, без fallback
+      } catch (err) {
+        console.error('Free slots fetch error:', err);
+        setTimeSlots([]); // Пустой массив при ошибке
+        setErrorMessage("Ошибка загрузки свободных слотов");
+      }
     };
 
     fetchFreeSlots();
-  }, [linkCode, selectedLocationId, selectedServiceId, selectedDate]);
+  }, [linkCode, selectedLocationId, selectedServiceId, selectedDate, errorMessage]);
 
   const hasSelectedLocation = locations.some((location) => location.selected);
   const hasSelectedService = services.some((service) => service.selected);
@@ -564,10 +406,36 @@ export default function TrainerBooking() {
   const isNextButtonDisabled =
     !hasSelectedLocation || !hasSelectedService || !hasSelectedTimeSlot;
 
+  const selectedLocation = locations.find(loc => loc.selected);
+  const selectedService = services.find(svc => svc.selected);
+  const selectedTimeSlot = timeSlots.find(slot => slot.selected);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background-primary flex items-center justify-center">
         <div className="text-black text-xl">Загрузка...</div>
+      </div>
+    );
+  }
+
+  if (errorMessage && !coach) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center xl:p-8 p-4">
+        <div className="max-w-[823px] w-full text-center">
+          <h1 className="xl:text-[66px] text-[32px] font-bold text-content-primary xl:mb-5 mb-3">
+            Ошибка
+          </h1>
+          <p className="xl:text-[38px] text-[18px] text-content-secondary mb-8">
+            {errorMessage}
+          </p>
+          <Button
+            className="w-full xl:h-[116px] h-[48px] xl:text-[32px] text-[16px] font-semibold rounded-[16px] xl:rounded-[40px] bg-accent-primary hover:bg-accent-secondary"
+            size="lg"
+            onClick={() => window.location.reload()}
+          >
+            Попробовать снова
+          </Button>
+        </div>
       </div>
     );
   }
@@ -870,9 +738,7 @@ export default function TrainerBooking() {
                   const selectedTimeSlot = timeSlots.find(slot => slot.selected);
 
                   if (!selectedLocation || !selectedService || !selectedTimeSlot) {
-                    alert('Выберите локацию, услугу и время');
-                    setShowErrorScreen(true);
-                    return;
+                    setShowErrorScreen(true); return;
                   }
 
                   // ПРОВЕРИТЕ selectedSlotId
@@ -891,13 +757,16 @@ export default function TrainerBooking() {
 
                   // ПОЛНЫЙ REQUEST BODY
                   const requestBody = {
-                    locationId: selectedLocation.id,        // ← ДОБАВИЛИ
-                    serviceId: selectedService.id,          // ← ДОБАВИЛИ  
+                    locationId: selectedLocation.id,
+                    serviceId: selectedService.id,
                     date: fullDateTime,
-                    trType: 5,                              // ← ДОБАВИЛИ (personal training)
+                    trType: 5,
                     duration: duration,
                     price: price,
-                    phone: phone,                           // Уже есть
+                    phone: phone,
+                    firstName: firstName,
+                    lastName: lastName,
+                    linkCode: linkCode,  // linkCode — это переменная из useSearchParams выше в коде
                   };
 
                   console.log('Request body:', requestBody); // Дебаг
@@ -931,6 +800,7 @@ export default function TrainerBooking() {
                     setSelectedTimeSlotId('');
                   } catch (err) {
                     console.error('Error submitting booking:', err);
+                    setErrorMessage(err.message);
                     setShowErrorScreen(true);
                   }
                 }}
@@ -981,7 +851,7 @@ export default function TrainerBooking() {
                 Информация
               </h2>
               <div className="">
-                {/* Info Item 1 */}
+                {/* Info Item 1 - Тренер */}
                 <div className="flex items-start xl:gap-[30px] gap-4 xl:pb-8 pb-4 xl:py-8 py-4 border-b border-gray-200">
                   <div>
                     <svg
@@ -1014,14 +884,12 @@ export default function TrainerBooking() {
                       Тренер
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {coach
-                        ? `${coach.firstName} ${coach.lastName}`
-                        : "Петров Александр"}
+                      {coach ? `${coach.firstName} ${coach.lastName}` : "Неизвестно"}
                     </p>
                   </div>
                 </div>
 
-                {/* Info Item 2 */}
+                {/* Info Item 2 - Локация */}
                 <div className="flex items-start xl:gap-[30px] gap-4 xl:py-8 py-4 border-b border-gray-200">
                   <div>
                     <svg
@@ -1061,15 +929,15 @@ export default function TrainerBooking() {
                       Локация
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      World Class{" "}
+                      {selectedLocation?.name || "Неизвестно"}
                     </p>
                     <h4 className="xl:text-[28px] text-[12px] text-[#9A9B9D]">
-                      г.Москва ул, Тверская 32
+                      {selectedLocation?.address || ""}
                     </h4>
                   </div>
                 </div>
 
-                {/* Info Item 3 */}
+                {/* Info Item 3 - Услуга */}
                 <div className="flex items-start xl:gap-[30px] gap-4 xl:py-8 py-4 border-b border-gray-200">
                   <div>
                     <svg
@@ -1102,12 +970,12 @@ export default function TrainerBooking() {
                       Услуга
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      Инструктаж в тренажёрном зале
+                      {selectedService?.name || "Неизвестно"}
                     </p>
                   </div>
                 </div>
 
-                {/* Info Item 4 */}
+                {/* Info Item 4 - Время */}
                 <div className="flex items-start xl:gap-[30px] gap-4 xl:py-8 py-4 border-b border-gray-200">
                   <div>
                     <svg
@@ -1140,12 +1008,19 @@ export default function TrainerBooking() {
                       Время
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      10:30 - 11:00
+                      {selectedTimeSlot?.time ? `${selectedTimeSlot.time} - ${(() => {
+                        const [hours, minutes] = selectedTimeSlot.time.split(':').map(Number);
+                        const durationMin = parseInt(selectedService?.duration.replace(/ мин$/, '')) || 60;
+                        const endHours = hours + Math.floor((minutes + durationMin) / 60);
+                        const endMinutes = (minutes + durationMin) % 60;
+                        return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+                      })()
+                        }` : "Неизвестно"}
                     </p>
                   </div>
                 </div>
 
-                {/* Info Item 5 */}
+                {/* Info Item 5 - Цена */}
                 <div className="flex items-start xl:gap-[30px] gap-4 xl:pt-8 pt-4">
                   <div>
                     <svg
@@ -1178,7 +1053,7 @@ export default function TrainerBooking() {
                       Цена
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      3 000
+                      {selectedService?.price || "Неизвестно"}
                     </p>
                   </div>
                 </div>
