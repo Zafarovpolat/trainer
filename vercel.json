@@ -1,0 +1,13 @@
+{
+    "rewrites": [
+        {
+            "source": "/widgets/:path*",
+            "destination": "https://coach-test.api.sofit.pw/widgets/:path*"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ],
+    "outputDirectory": "dist/spa"
+}
