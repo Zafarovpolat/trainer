@@ -20,6 +20,59 @@ import {
   ServiceRequestResponse,
 } from "../../shared/api";
 
+const translations = {
+  Rus: {
+    loading: "Загрузка...",
+    error: "Ошибка",
+    tryAgain: "Попробовать снова",
+    location: "Локация",
+    services: "Услуги",
+    dateTime: "Дата и время",
+    personalTrainer: "Персональный тренер",
+    continue: "Продолжить",
+    toMain: "На главную",
+    weekDays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+    monthNames: [
+      "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+      "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ],
+    errorMessages: {
+      noLinkCode: "Отсутствует код ссылки для тренера",
+      coachNotFound: "Тренер не найден. Проверьте ссылку.",
+      locationsError: "Ошибка загрузки локаций",
+      servicesError: "Ошибка загрузки услуг",
+      slotsError: "Ошибка загрузки свободных слотов",
+      noName: "Без названия",
+      noAddress: "Адрес не указан",
+    },
+  },
+  Eng: {
+    loading: "Loading...",
+    error: "Error",
+    tryAgain: "Try Again",
+    location: "Location",
+    services: "Services",
+    dateTime: "Date and Time",
+    personalTrainer: "Personal Trainer",
+    continue: "Continue",
+    toMain: "Back to Main",
+    weekDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    monthNames: [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ],
+    errorMessages: {
+      noLinkCode: "Trainer link code is missing",
+      coachNotFound: "Trainer not found. Check the link.",
+      locationsError: "Error loading locations",
+      servicesError: "Error loading services",
+      slotsError: "Error loading available slots",
+      noName: "No name",
+      noAddress: "No address",
+    },
+  },
+};
+
 interface ServiceOption {
   id: string;
   name: string;
@@ -44,7 +97,7 @@ interface TimeSlot {
 
 export default function TrainerBooking() {
   const [searchParams] = useSearchParams();
-  const linkCode = searchParams.get("linkCode") || '676767'
+  const linkCode = searchParams.get("linkCode")
 
   const [coach, setCoach] = useState<Coach | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +118,8 @@ export default function TrainerBooking() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+
+  const t = translations[selectedLanguage]; // Текущие переводы
 
   const languageOptions = [
     {
@@ -164,35 +219,35 @@ export default function TrainerBooking() {
         </svg>
       ),
     },
-    {
-      code: "Ukr",
-      name: "Ukr",
-      flag: (
-        <svg
-          width="auto"
-          height="auto"
-          viewBox="0 0 18 18"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <g clip-path="url(#clip0_5_857)">
-            <path
-              d="M9 18C13.9706 18 18 13.9706 18 9C18 4.02944 13.9706 0 9 0C4.02944 0 0 4.02944 0 9C0 13.9706 4.02944 18 9 18Z"
-              fill="#FFDA44"
-            />
-            <path
-              d="M0 9C0 4.02947 4.02947 0 9 0C13.9705 0 18 4.02947 18 9"
-              fill="#338AF3"
-            />
-          </g>
-          <defs>
-            <clipPath id="clip0_5_857">
-              <rect width="18" height="18" fill="white" />
-            </clipPath>
-          </defs>
-        </svg>
-      ),
-    },
+    // {
+    //   code: "Ukr",
+    //   name: "Ukr",
+    //   flag: (
+    //     <svg
+    //       width="auto"
+    //       height="auto"
+    //       viewBox="0 0 18 18"
+    //       fill="none"
+    //       xmlns="http://www.w3.org/2000/svg"
+    //     >
+    //       <g clip-path="url(#clip0_5_857)">
+    //         <path
+    //           d="M9 18C13.9706 18 18 13.9706 18 9C18 4.02944 13.9706 0 9 0C4.02944 0 0 4.02944 0 9C0 13.9706 4.02944 18 9 18Z"
+    //           fill="#FFDA44"
+    //         />
+    //         <path
+    //           d="M0 9C0 4.02947 4.02947 0 9 0C13.9705 0 18 4.02947 18 9"
+    //           fill="#338AF3"
+    //         />
+    //       </g>
+    //       <defs>
+    //         <clipPath id="clip0_5_857">
+    //           <rect width="18" height="18" fill="white" />
+    //         </clipPath>
+    //       </defs>
+    //     </svg>
+    //   ),
+    // },
   ];
 
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -237,9 +292,8 @@ export default function TrainerBooking() {
   };
 
   useEffect(() => {
-
     if (!linkCode) {
-      setErrorMessage("Отсутствует код ссылки для тренера");
+      setErrorMessage(t.errorMessages.noLinkCode);
       setLoading(false);
       setShowErrorScreen(true);
       return;
@@ -247,98 +301,108 @@ export default function TrainerBooking() {
 
     const fetchCoach = async () => {
       try {
-        console.log('Fetching coach with linkCode:', linkCode);
-        const response = await fetch(`/widgets/coach?linkCode=${linkCode}`);
+        const response = await fetch(`/widgets/coach?linkCode=${linkCode}`, {
+          headers: {
+            'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+          },
+        });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Coach fetch error:', response.status, errorText);
           throw new Error(`Failed to fetch coach: ${errorText}`);
         }
 
         const coachData: Coach = await response.json();
-        console.log('Coach loaded successfully:', coachData);
-
         setCoach(coachData);
       } catch (err) {
-        console.error('Coach fetch failed:', err);
-        setErrorMessage("Тренер не найден. Проверьте ссылку.");
+        setErrorMessage(t.errorMessages.coachNotFound);
         setShowErrorScreen(true);
-
       } finally {
         setLoading(false);
       }
     };
 
     fetchCoach();
-  }, [linkCode]);
+  }, [linkCode, selectedLanguage, t]);
 
+  // Автоматический выбор единственной локации
   useEffect(() => {
-
     if (!linkCode || errorMessage) return;
 
     const fetchLocations = async () => {
       try {
         const response = await fetch(
           `/widgets/locations?linkCode=${linkCode}&page=1&size=50`,
+          {
+            headers: {
+              'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+            },
+          }
         );
         if (!response.ok) {
           throw new Error("Failed to fetch locations data");
         }
         const locationsData: LocationsResponse = await response.json();
-        // Transform API data to LocationOption format
         const transformedLocations: LocationOption[] = locationsData.items.map(
           (item: LocationItem) => ({
             id: item.id,
-            name: item.name || "Без названия",
-            address:
-              `${item.city || ""} ${item.street || ""}`.trim() ||
-              "Адрес не указан",
-            selected: false,
+            name: item.name || t.errorMessages.noName,
+            address: `${item.city || ""} ${item.street || ""}`.trim() || t.errorMessages.noAddress,
+            selected: locationsData.items.length === 1,
           }),
         );
         setLocations(transformedLocations);
+        if (transformedLocations.length === 1) {
+          setSelectedLocationId(transformedLocations[0].id);
+        }
       } catch (err) {
-        setErrorMessage("Ошибка загрузки локаций");
+        setErrorMessage(t.errorMessages.locationsError);
       }
     };
 
     fetchLocations();
-  }, [linkCode, errorMessage]);
+  }, [linkCode, errorMessage, selectedLanguage, t]);
 
+  // Автоматический выбор единственной услуги
   useEffect(() => {
-
     if (!linkCode || errorMessage) return;
 
     const fetchServices = async () => {
       try {
         const response = await fetch(
           `/widgets/services?linkCode=${linkCode}&page=1&size=50`,
+          {
+            headers: {
+              'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+            },
+          }
         );
         if (!response.ok) {
           throw new Error("Failed to fetch services data");
         }
         const servicesData: ServicesResponse = await response.json();
-        // Transform API data to ServiceOption format
         const transformedServices: ServiceOption[] = servicesData.items.map(
           (item: ServiceItem) => ({
             id: item.id,
-            name: item.name || "Без названия",
-            duration: `${item.duration} мин`,
-            price: `${item.price.toLocaleString("ru-RU")} ₽`,
-            selected: false,
+            name: item.name || t.errorMessages.noName,
+            duration: `${item.duration} ${selectedLanguage === 'Eng' ? 'min' : 'мин'}`,
+            price: `${item.price.toLocaleString(selectedLanguage === 'Eng' ? 'en-US' : 'ru-RU')} ${selectedLanguage === 'Eng' ? '$' : '₽'}`,
+            selected: servicesData.items.length === 1,
           }),
         );
         setServices(transformedServices);
+        if (transformedServices.length === 1) {
+          setSelectedServiceId(transformedServices[0].id);
+        }
       } catch (err) {
-        console.error('Services fetch failed:', err);
-        setErrorMessage("Ошибка загрузки услуг");
+        setErrorMessage(t.errorMessages.servicesError);
       }
     };
 
     fetchServices();
-  }, [linkCode, errorMessage]);
+  }, [linkCode, errorMessage, selectedLanguage, t]);
 
+  // Автоматический выбор единственного временного слота
   useEffect(() => {
     if (!linkCode || errorMessage || !selectedLocationId || !selectedServiceId || !selectedDate) return;
 
@@ -351,8 +415,8 @@ export default function TrainerBooking() {
           `/widgets/free-slots?linkCode=${linkCode}&locationId=${selectedLocationId}&serviceId=${selectedServiceId}&dateFrom=${dateFrom}&dateTo=${dateTo}`,
           {
             headers: {
-              'Content-Language': 'ru',
-            }
+              'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+            },
           }
         );
 
@@ -362,7 +426,6 @@ export default function TrainerBooking() {
         }
 
         const freeSlotsData = await response.json();
-
         const transformedSlots: TimeSlot[] = [];
         if (freeSlotsData.schedule && Array.isArray(freeSlotsData.schedule)) {
           freeSlotsData.schedule.forEach((day: any, dayIndex: number) => {
@@ -375,30 +438,32 @@ export default function TrainerBooking() {
                 } else if (typeof slotTime === 'object' && slotTime.startTime) {
                   time = slotTime.startTime;
                 } else {
-                  time = '10:00'; // Минимальный fallback, если слот пустой
+                  time = '10:00';
                 }
 
                 transformedSlots.push({
                   id: `${day.date || selectedDate}-${time}-${index}`,
                   time: time,
                   available: true,
-                  selected: false,
+                  selected: transformedSlots.length === 0 && day.freeSlots.length === 1,
                 });
               });
             }
           });
         }
 
-        setTimeSlots(transformedSlots.length > 0 ? transformedSlots : []); // Если пусто — пустой массив, без fallback
+        setTimeSlots(transformedSlots.length > 0 ? transformedSlots : []);
+        if (transformedSlots.length === 1) {
+          setSelectedTimeSlotId(transformedSlots[0].id);
+        }
       } catch (err) {
-        console.error('Free slots fetch error:', err);
-        setTimeSlots([]); // Пустой массив при ошибке
-        setErrorMessage("Ошибка загрузки свободных слотов");
+        setTimeSlots([]);
+        setErrorMessage(t.errorMessages.slotsError);
       }
     };
 
     fetchFreeSlots();
-  }, [linkCode, selectedLocationId, selectedServiceId, selectedDate, errorMessage]);
+  }, [linkCode, selectedLocationId, selectedServiceId, selectedDate, errorMessage, selectedLanguage, t]);
 
   const hasSelectedLocation = locations.some((location) => location.selected);
   const hasSelectedService = services.some((service) => service.selected);
@@ -413,7 +478,7 @@ export default function TrainerBooking() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background-primary flex items-center justify-center">
-        <div className="text-black text-xl">Загрузка...</div>
+        <div className="text-black text-xl">{t.loading}</div>
       </div>
     );
   }
@@ -423,7 +488,7 @@ export default function TrainerBooking() {
       <div className="min-h-screen bg-white flex items-center justify-center xl:p-8 p-4">
         <div className="max-w-[823px] w-full text-center">
           <h1 className="xl:text-[66px] text-[32px] font-bold text-content-primary xl:mb-5 mb-3">
-            Ошибка
+            {t.error}
           </h1>
           <p className="xl:text-[38px] text-[18px] text-content-secondary mb-8">
             {errorMessage}
@@ -433,7 +498,7 @@ export default function TrainerBooking() {
             size="lg"
             onClick={() => window.location.reload()}
           >
-            Попробовать снова
+            {t.tryAgain}
           </Button>
         </div>
       </div>
@@ -559,6 +624,7 @@ export default function TrainerBooking() {
         <div className="max-w-[calc(100%-32px)] xl:max-w-[823px] mx-auto mt-4 space-y-4 xl:space-y-8 xl:mt-8 relative z-10">
           {/* Location Section */}
           <LocationSection
+            t={t}
             locations={locations}
             onSelectLocation={selectLocation}
             isOpen={isLocationOpen}
@@ -567,6 +633,7 @@ export default function TrainerBooking() {
 
           {/* Services Section */}
           <ServicesSection
+            t={t}
             services={services}
             onToggleService={toggleService}
             isOpen={isServicesOpen}
@@ -575,6 +642,7 @@ export default function TrainerBooking() {
 
           {/* Date & Time Section */}
           <DateTimeSection
+            t={t}
             selectedDate={selectedDate}
             timeSlots={timeSlots}
             onSelectDate={setSelectedDate}
@@ -769,7 +837,6 @@ export default function TrainerBooking() {
                     linkCode: linkCode,  // linkCode — это переменная из useSearchParams выше в коде
                   };
 
-                  console.log('Request body:', requestBody); // Дебаг
 
                   try {
                     const response = await fetch('/widgets/service-request', { // ← ИСПРАВИЛИ: добавили "s"
@@ -783,12 +850,10 @@ export default function TrainerBooking() {
 
                     if (!response.ok) {
                       const errorText = await response.text();
-                      console.error('Booking error:', response.status, errorText);
                       throw new Error(`HTTP ${response.status}: ${errorText}`);
                     }
 
                     const data = await response.json();
-                    console.log('Booking success:', data);
                     setShowSuccessScreen(true);
 
                     // Сброс формы
@@ -799,7 +864,6 @@ export default function TrainerBooking() {
                     setSelectedServiceId('');
                     setSelectedTimeSlotId('');
                   } catch (err) {
-                    console.error('Error submitting booking:', err);
                     setErrorMessage(err.message);
                     setShowErrorScreen(true);
                   }
@@ -1089,26 +1153,23 @@ function ServicesSection({
   onToggleService,
   isOpen,
   onToggle,
+  t, // Добавляем пропс t
 }: {
   services: ServiceOption[];
   onToggleService: (id: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  t: typeof translations['Rus']; // Тип для словаря переводов
 }) {
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card
-        className={
-          " rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
-        }
+        className="rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
       >
-        {/* Header */}
         <CollapsibleTrigger asChild>
           <div className={`flex items-center gap-[12px] xl:gap-8 cursor-pointer xl:px-10 p-6 xl:pt-[60px] xl:pb-[60px] ${isOpen ? "xl:pb-0 pb-0" : "pb-6 xl:pb-[60px"}`}>
             <svg
               className="xl:w-[58px] w-[24px] xl:h-[58px] h-[24px]"
-              width="58"
-              height="58"
               viewBox="0 0 58 58"
               fill="none"
               style={{ flexShrink: 0 }}
@@ -1121,11 +1182,9 @@ function ServicesSection({
                 strokeLinejoin="round"
               />
             </svg>
-
             <h2 className="flex-1 text-[16px] xl:text-3xl font-medium text-content-primary">
-              Услуги
+              {t.services} {/* Используем t.services из пропса */}
             </h2>
-
             <svg
               width="58"
               height="58"
@@ -1143,9 +1202,7 @@ function ServicesSection({
             </svg>
           </div>
         </CollapsibleTrigger>
-
         <CollapsibleContent>
-          {/* Service options */}
           <div className="space-y-2 xl:mt-10 mt-4 xl:space-y-3 xl:px-10 px-6 pb-6 xl:pb-[60px]">
             {services.map((service, index) => (
               <div key={service.id}>
@@ -1246,25 +1303,23 @@ function LocationSection({
   onSelectLocation,
   isOpen,
   onToggle,
+  t, // Добавляем пропс t
 }: {
   locations: LocationOption[];
   onSelectLocation: (id: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  t: typeof translations['Rus']; // Тип для словаря переводов
 }) {
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card
-        className={
-          " rounded-[18px] xl:rounded-[40px] overflow-hidden border-0  bg-background-secondary shadow-sm"
-        }
+        className="rounded-[18px] xl:rounded-[40px] overflow-hidden border-0 bg-background-secondary shadow-sm"
       >
         <CollapsibleTrigger asChild>
           <div className={`flex items-center gap-[12px] xl:gap-8 cursor-pointer xl:px-10 p-6 xl:pt-[60px] ${isOpen ? 'pb-0' : 'pb-[24px] xl:pb-[60px]'}`}>
             <svg
               className="xl:w-[56px] w-[24px] xl:h-[56px] h-[24px]"
-              width="56"
-              height="56"
               viewBox="0 0 56 56"
               fill="none"
             >
@@ -1283,14 +1338,10 @@ function LocationSection({
                 strokeLinejoin="round"
               />
             </svg>
-
             <h2 className="flex-1 text-[16px] xl:text-3xl font-medium text-content-primary">
-              Локация
+              {t.location} {/* Используем t.location из пропса */}
             </h2>
-
             <svg
-              width="56"
-              height="56"
               viewBox="0 0 56 56"
               fill="none"
               className={`xl:w-[56px] w-[24px] xl:h-[56px] h-[24px] transform transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -1305,9 +1356,7 @@ function LocationSection({
             </svg>
           </div>
         </CollapsibleTrigger>
-
         <CollapsibleContent>
-          {/* Location options */}
           <div className="xl:space-y-5 mt-4 xl:mt-10 xl:px-10 px-6 pb-6 xl:pb-[60px]">
             {locations.map((location, index) => (
               <div key={location.id}>
@@ -1367,6 +1416,7 @@ function DateTimeSection({
   onSelectTimeSlot,
   isOpen,
   onToggle,
+  t, // Добавляем пропс t
 }: {
   selectedDate: string;
   timeSlots: TimeSlot[];
@@ -1374,17 +1424,16 @@ function DateTimeSection({
   onSelectTimeSlot: (id: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  t: typeof translations['Rus']; // Тип для словаря переводов
 }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Calculate offset to Monday
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const monday = new Date(today);
     monday.setDate(today.getDate() + mondayOffset);
     return monday;
   });
-
-  const weekDays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
   const getWeekDays = (weekStart: Date) => {
     const days = [];
@@ -1406,15 +1455,13 @@ function DateTimeSection({
       const newDate = new Date(prevDate);
       if (direction === "prev") {
         newDate.setDate(newDate.getDate() - 7);
-        // Check if the new week would contain past dates
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day
+        today.setHours(0, 0, 0, 0);
         const newWeekEnd = new Date(newDate);
         newWeekEnd.setDate(newDate.getDate() + 6);
-        newWeekEnd.setHours(23, 59, 59, 999); // End of day
-
+        newWeekEnd.setHours(23, 59, 59, 999);
         if (newWeekEnd < today) {
-          return prevDate; // Don't navigate if it would show past dates
+          return prevDate;
         }
       } else {
         newDate.setDate(newDate.getDate() + 7);
@@ -1429,10 +1476,8 @@ function DateTimeSection({
     const prevWeekEnd = new Date(prevWeekStart);
     prevWeekEnd.setDate(prevWeekStart.getDate() + 6);
     prevWeekEnd.setHours(23, 59, 59, 999);
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     return prevWeekEnd >= today;
   };
 
@@ -1440,38 +1485,18 @@ function DateTimeSection({
   const today = new Date();
 
   const formatMonthYear = (weekStart: Date) => {
-    const monthNames = [
-      "Январь",
-      "Февраль",
-      "Март",
-      "Апрель",
-      "Май",
-      "Июнь",
-      "Июль",
-      "Август",
-      "Сентябрь",
-      "Октябрь",
-      "Ноябрь",
-      "Декабрь",
-    ];
-
-    return `${monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
+    return `${t.monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
   };
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card
-        className={
-          " rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
-        }
+        className="rounded-[18px] xl:rounded-[40px] bg-background-secondary border-0 shadow-sm"
       >
-        {/* Header */}
         <CollapsibleTrigger asChild>
           <div className={`flex items-center gap-[12px] xl:gap-8 cursor-pointer xl:px-10 p-6 xl:py-[60px] ${isOpen ? "xl:pb-0 pb-0" : "xl:pb-[60px]"}`}>
             <svg
               className="xl:w-[56px] w-[24px] xl:h-[56px] h-[24px]"
-              width="56"
-              height="56"
               viewBox="0 0 56 56"
               fill="none"
               style={{ flexShrink: 0 }}
@@ -1484,14 +1509,10 @@ function DateTimeSection({
                 strokeLinejoin="round"
               />
             </svg>
-
             <h2 className="flex-1 text-[16px] xl:text-3xl font-medium text-content-primary">
-              Дата и время
+              {t.dateTime} {/* Используем t.dateTime из пропса */}
             </h2>
-
             <svg
-              width="57"
-              height="56"
               viewBox="0 0 57 56"
               fill="none"
               className={`xl:w-[57px] w-[24px] xl:h-[56px] h-[24px] transform transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -1506,14 +1527,10 @@ function DateTimeSection({
             </svg>
           </div>
         </CollapsibleTrigger>
-
         <CollapsibleContent>
           <div className="xl:space-y-5 space-y-3 xl:mt-10 xl:px-10 px-6 xl:pb-[60px] pb-6">
             <div className="h-0.5 bg-gray-300 mt-6 xl:my-8" />
-
-            {/* Calendar */}
             <div className="bg-white rounded-3xl xl:p-10 p-4 mb-8">
-              {/* Week header */}
               <div className="flex items-center justify-between xl:mb-8 mb-3">
                 <h3 className="xl:text-3xl text-[16px] font-medium text-content-primary">
                   {formatMonthYear(currentWeekStart)}
@@ -1526,8 +1543,6 @@ function DateTimeSection({
                   >
                     <svg
                       className="xl:w-[57px] w-[24px] xl:h-[57px] h-[24px]"
-                      width="57"
-                      height="57"
                       viewBox="0 0 24 24"
                       fill="none"
                     >
@@ -1546,8 +1561,6 @@ function DateTimeSection({
                   >
                     <svg
                       className="xl:w-[57px] w-[24px] xl:h-[57px] h-[24px]"
-                      width="57"
-                      height="57"
                       viewBox="0 0 24 24"
                       fill="none"
                     >
@@ -1562,10 +1575,8 @@ function DateTimeSection({
                   </button>
                 </div>
               </div>
-
-              {/* Days of week and dates */}
               <div className="grid grid-cols-7 xl:gap-4 gap-2">
-                {weekDays.map((day, index) => (
+                {t.weekDays.map((day, index) => (
                   <div key={day} className="text-center">
                     <div className="text-content-secondary xl:text-[28px] text-[12px] xl:mb-8 mb-4">
                       {day}
@@ -1593,10 +1604,7 @@ function DateTimeSection({
                 ))}
               </div>
             </div>
-
             <div className="h-0.5 bg-gray-300 mb-8" />
-
-            {/* Time slots */}
             <div className="xl:space-y-7 space-y-4">
               {Array.from({ length: 4 }, (_, rowIndex) => (
                 <div key={rowIndex} className="grid grid-cols-4 xl:gap-8 gap-4">
@@ -1607,7 +1615,7 @@ function DateTimeSection({
                         key={slot.id}
                         onClick={() => onSelectTimeSlot(slot.id)}
                         disabled={!slot.available}
-                        className={`xl:px-10  h-[36px] xl:py-[18px] sm:h-[50px] xl:h-[90px] rounded-full xl:text-[32px] text-[16px] font-medium transition-colors ${slot.selected
+                        className={`xl:px-10 h-[36px] xl:py-[18px] sm:h-[50px] xl:h-[90px] rounded-full xl:text-[32px] text-[16px] font-medium transition-colors ${slot.selected
                           ? "bg-accent-primary text-white"
                           : slot.available
                             ? "bg-white border border-gray-200 text-content-secondary hover:bg-gray-50"
