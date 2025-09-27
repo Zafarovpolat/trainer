@@ -28,9 +28,9 @@ const translations = {
     location: "Локация",
     services: "Услуги",
     dateTime: "Дата и время",
-    personalTrainer: "Персональный тренер",
     continue: "Продолжить",
     toMain: "На главную",
+    coach: "Персональный тренер",
     weekDays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
     monthNames: [
       "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
@@ -45,6 +45,30 @@ const translations = {
       noName: "Без названия",
       noAddress: "Адрес не указан",
     },
+    form: {
+      title: "Введите свои данные",
+      subtitle: "Данные необходимы для обратной связи тренера с Вами",
+      firstName: "Имя",
+      lastName: "Фамилия",
+      phone: "Телефон",
+      phonePlaceholder: "+79999999999",
+      submit: "Далее",
+    },
+    success: {
+      title: "Отлично",
+      message: "Вы успешно записались!",
+      info: "Информация",
+      trainer: "Тренер",
+      location: "Локация",
+      service: "Услуга",
+      time: "Время",
+      price: "Цена",
+      unknown: "Неизвестно",
+    },
+    errorScreen: {
+      title: "Упс, ошибка",
+      message: "Произошла ошибка, попробуйте записаться заново",
+    },
   },
   Eng: {
     loading: "Loading...",
@@ -53,9 +77,9 @@ const translations = {
     location: "Location",
     services: "Services",
     dateTime: "Date and Time",
-    personalTrainer: "Personal Trainer",
     continue: "Continue",
     toMain: "Back to Main",
+    coach: "Personal trainer",
     weekDays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     monthNames: [
       "January", "February", "March", "April", "May", "June",
@@ -69,6 +93,79 @@ const translations = {
       slotsError: "Error loading available slots",
       noName: "No name",
       noAddress: "No address",
+    },
+    form: {
+      title: "Enter your details",
+      subtitle: "Details are required for the trainer to contact you",
+      firstName: "First Name",
+      lastName: "Last Name",
+      phone: "Phone",
+      phonePlaceholder: "+15551234567",
+      submit: "Next",
+    },
+    success: {
+      title: "Great",
+      message: "You have successfully booked!",
+      info: "Information",
+      trainer: "Trainer",
+      location: "Location",
+      service: "Service",
+      time: "Time",
+      price: "Price",
+      unknown: "Unknown",
+    },
+    errorScreen: {
+      title: "Oops, error",
+      message: "An error occurred, try booking again",
+    },
+  },
+  Ukr: {
+    loading: "Завантаження...",
+    error: "Помилка",
+    tryAgain: "Спробувати знову",
+    location: "Локація",
+    services: "Послуги",
+    dateTime: "Дата і час",
+    continue: "Продовжити",
+    toMain: "На головну",
+    coach: "Персональний тренер",
+    weekDays: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"],
+    monthNames: [
+      "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+      "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+    ],
+    errorMessages: {
+      noLinkCode: "Відсутній код посилання для тренера",
+      coachNotFound: "Тренера не знайдено. Перевірте посилання.",
+      locationsError: "Помилка завантаження локацій",
+      servicesError: "Помилка завантаження послуг",
+      slotsError: "Помилка завантаження вільних слотів",
+      noName: "Без назви",
+      noAddress: "Адреса не вказана",
+    },
+    form: {
+      title: "Введіть свої дані",
+      subtitle: "Дані необхідні для зворотного зв'язку тренера з Вами",
+      firstName: "Ім'я",
+      lastName: "Прізвище",
+      phone: "Телефон",
+      phonePlaceholder: "+380999999999",
+      submit: "Далі",
+    },
+    success: {
+      title: "Чудово",
+      message: "Ви успішно записалися!",
+      info: "Інформація",
+      trainer: "Тренер",
+      location: "Локація",
+      service: "Послуга",
+      time: "Час",
+      price: "Ціна",
+      unknown: "Невідомо",
+    },
+    errorScreen: {
+      title: "Упс, помилка",
+      message: "Сталася помилка, спробуйте записатися заново",
     },
   },
 };
@@ -86,6 +183,7 @@ interface LocationOption {
   name: string;
   address: string;
   selected: boolean;
+  schedules?: any[];
 }
 
 interface TimeSlot {
@@ -94,6 +192,11 @@ interface TimeSlot {
   available: boolean;
   selected: boolean;
 }
+
+const timeToMinutes = (timeStr: string): number => {
+  const [h, m] = timeStr.split(':').slice(0, 2).map(Number);
+  return h * 60 + m;
+};
 
 export default function TrainerBooking() {
   const [searchParams] = useSearchParams();
@@ -121,12 +224,15 @@ export default function TrainerBooking() {
 
   const t = translations[selectedLanguage]; // Текущие переводы
 
+  const phonePrefix = selectedLanguage === 'Eng' ? '+1' : selectedLanguage === 'Ukr' ? '+380' : '+7';
+  const phoneMinLength = selectedLanguage === 'Eng' ? 11 : 12;
+
   const languageOptions = [
     {
       code: "Rus",
       name: "Rus",
       flag: (
-        <svg width="auto" height="auto" viewBox="0 0 44 44" fill="none">
+        <svg viewBox="0 0 44 44" fill="none">
           <path
             d="M21.8 40.9999C11.1961 40.9999 2.6 32.4037 2.6 21.7999C2.6 11.196 11.1961 2.59985 21.8 2.59985C32.4039 2.59985 41 11.196 41 21.7999C41 32.4037 32.4039 40.9999 21.8 40.9999Z"
             fill="#0052B5"
@@ -147,13 +253,11 @@ export default function TrainerBooking() {
       name: "Eng",
       flag: (
         <svg
-          width="auto"
-          height="auto"
           viewBox="0 0 18 18"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <g clip-path="url(#clip0_5_837)">
+          <g clipPath="url(#clip0_5_837)">
             <path
               d="M9 18C13.9706 18 18 13.9706 18 9C18 4.02944 13.9706 0 9 0C4.02944 0 0 4.02944 0 9C0 13.9706 4.02944 18 9 18Z"
               fill="#F0F0F0"
@@ -219,35 +323,33 @@ export default function TrainerBooking() {
         </svg>
       ),
     },
-    // {
-    //   code: "Ukr",
-    //   name: "Ukr",
-    //   flag: (
-    //     <svg
-    //       width="auto"
-    //       height="auto"
-    //       viewBox="0 0 18 18"
-    //       fill="none"
-    //       xmlns="http://www.w3.org/2000/svg"
-    //     >
-    //       <g clip-path="url(#clip0_5_857)">
-    //         <path
-    //           d="M9 18C13.9706 18 18 13.9706 18 9C18 4.02944 13.9706 0 9 0C4.02944 0 0 4.02944 0 9C0 13.9706 4.02944 18 9 18Z"
-    //           fill="#FFDA44"
-    //         />
-    //         <path
-    //           d="M0 9C0 4.02947 4.02947 0 9 0C13.9705 0 18 4.02947 18 9"
-    //           fill="#338AF3"
-    //         />
-    //       </g>
-    //       <defs>
-    //         <clipPath id="clip0_5_857">
-    //           <rect width="18" height="18" fill="white" />
-    //         </clipPath>
-    //       </defs>
-    //     </svg>
-    //   ),
-    // },
+    {
+      code: "Ukr",
+      name: "Ukr",
+      flag: (
+        <svg
+          viewBox="0 0 18 18"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g clipPath="url(#clip0_5_857)">
+            <path
+              d="M9 18C13.9706 18 18 13.9706 18 9C18 4.02944 13.9706 0 9 0C4.02944 0 0 4.02944 0 9C0 13.9706 4.02944 18 9 18Z"
+              fill="#FFDA44"
+            />
+            <path
+              d="M0 9C0 4.02947 4.02947 0 9 0C13.9705 0 18 4.02947 18 9"
+              fill="#338AF3"
+            />
+          </g>
+          <defs>
+            <clipPath id="clip0_5_857">
+              <rect width="18" height="18" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+      ),
+    },
   ];
 
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -303,7 +405,7 @@ export default function TrainerBooking() {
       try {
         const response = await fetch(`/widgets/coach?linkCode=${linkCode}`, {
           headers: {
-            'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+            'Content-Language': selectedLanguage === 'Eng' ? 'en' : selectedLanguage === 'Ukr' ? 'uk' : 'ru',
           },
         });
 
@@ -325,7 +427,6 @@ export default function TrainerBooking() {
     fetchCoach();
   }, [linkCode, selectedLanguage, t]);
 
-  // Автоматический выбор единственной локации
   useEffect(() => {
     if (!linkCode || errorMessage) return;
 
@@ -335,7 +436,7 @@ export default function TrainerBooking() {
           `/widgets/locations?linkCode=${linkCode}&page=1&size=50`,
           {
             headers: {
-              'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+              'Content-Language': selectedLanguage === 'Eng' ? 'en' : selectedLanguage === 'Ukr' ? 'uk' : 'ru',
             },
           }
         );
@@ -343,15 +444,18 @@ export default function TrainerBooking() {
           throw new Error("Failed to fetch locations data");
         }
         const locationsData: LocationsResponse = await response.json();
+
         const transformedLocations: LocationOption[] = locationsData.items.map(
           (item: LocationItem) => ({
             id: item.id,
             name: item.name || t.errorMessages.noName,
             address: `${item.city || ""} ${item.street || ""}`.trim() || t.errorMessages.noAddress,
             selected: locationsData.items.length === 1,
+            schedules: item.schedules,
           }),
         );
         setLocations(transformedLocations);
+
         if (transformedLocations.length === 1) {
           setSelectedLocationId(transformedLocations[0].id);
         }
@@ -373,7 +477,7 @@ export default function TrainerBooking() {
           `/widgets/services?linkCode=${linkCode}&page=1&size=50`,
           {
             headers: {
-              'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+              'Content-Language': selectedLanguage === 'Eng' ? 'en' : selectedLanguage === 'Ukr' ? 'uk' : 'ru',
             },
           }
         );
@@ -381,12 +485,13 @@ export default function TrainerBooking() {
           throw new Error("Failed to fetch services data");
         }
         const servicesData: ServicesResponse = await response.json();
+
         const transformedServices: ServiceOption[] = servicesData.items.map(
           (item: ServiceItem) => ({
             id: item.id,
             name: item.name || t.errorMessages.noName,
-            duration: `${item.duration} ${selectedLanguage === 'Eng' ? 'min' : 'мин'}`,
-            price: `${item.price.toLocaleString(selectedLanguage === 'Eng' ? 'en-US' : 'ru-RU')} ${selectedLanguage === 'Eng' ? '$' : '₽'}`,
+            duration: `${item.duration} ${selectedLanguage === 'Eng' ? 'min' : selectedLanguage === 'Ukr' ? 'хв' : 'мин'}`,
+            price: `${item.price.toLocaleString(selectedLanguage === 'Eng' ? 'en-US' : selectedLanguage === 'Ukr' ? 'uk-UA' : 'ru-RU')} ₽`,
             selected: servicesData.items.length === 1,
           }),
         );
@@ -415,7 +520,7 @@ export default function TrainerBooking() {
           `/widgets/free-slots?linkCode=${linkCode}&locationId=${selectedLocationId}&serviceId=${selectedServiceId}&dateFrom=${dateFrom}&dateTo=${dateTo}`,
           {
             headers: {
-              'Content-Language': selectedLanguage === 'Eng' ? 'en' : 'ru',
+              'Content-Language': selectedLanguage === 'Eng' ? 'en' : selectedLanguage === 'Ukr' ? 'uk' : 'ru',
             },
           }
         );
@@ -426,9 +531,18 @@ export default function TrainerBooking() {
         }
 
         const freeSlotsData = await response.json();
+
+        const selectedLoc = locations.find(l => l.id === selectedLocationId);
+        const selectedService = services.find(s => s.id === selectedServiceId);
+        const durationMin = parseInt(selectedService?.duration.replace(/[^0-9]/g, '')) || 60;
+
         const transformedSlots: TimeSlot[] = [];
         if (freeSlotsData.schedule && Array.isArray(freeSlotsData.schedule)) {
-          freeSlotsData.schedule.forEach((day: any, dayIndex: number) => {
+          freeSlotsData.schedule.forEach((day: any) => {
+            const daySchedule = selectedLoc?.schedules?.find((s: any) => s.dayOfWeek === day.day);
+            const endTimeStr = daySchedule?.endTime || '20:00:00';
+            const endMinutes = timeToMinutes(endTimeStr);
+
             if (day.freeSlots && Array.isArray(day.freeSlots)) {
               day.freeSlots.forEach((slotTime: any, index: number) => {
                 let time = '';
@@ -441,12 +555,15 @@ export default function TrainerBooking() {
                   time = '10:00';
                 }
 
-                transformedSlots.push({
-                  id: `${day.date || selectedDate}-${time}-${index}`,
-                  time: time,
-                  available: true,
-                  selected: transformedSlots.length === 0 && day.freeSlots.length === 1,
-                });
+                const startMinutes = timeToMinutes(time);
+                if (startMinutes + durationMin <= endMinutes) {
+                  transformedSlots.push({
+                    id: `${day.date || selectedDate}-${time}-${index}`,
+                    time: time,
+                    available: true,
+                    selected: transformedSlots.length === 0 && day.freeSlots.length === 1,
+                  });
+                }
               });
             }
           });
@@ -463,7 +580,7 @@ export default function TrainerBooking() {
     };
 
     fetchFreeSlots();
-  }, [linkCode, selectedLocationId, selectedServiceId, selectedDate, errorMessage, selectedLanguage, t]);
+  }, [linkCode, selectedLocationId, selectedServiceId, selectedDate, errorMessage, selectedLanguage, t, locations, services]);
 
   const hasSelectedLocation = locations.some((location) => location.selected);
   const hasSelectedService = services.some((service) => service.selected);
@@ -600,7 +717,7 @@ export default function TrainerBooking() {
                       "./avatar.png"
                     }
                     alt={
-                      coach ? `${coach.firstName} ${coach.lastName}` : "Тренер"
+                      coach ? `${coach.firstName} ${coach.lastName}` : t.coach
                     }
                     className="w-full h-full object-cover"
                   />
@@ -609,10 +726,10 @@ export default function TrainerBooking() {
                 {/* Trainer details */}
                 <div className="text-white font-sf-pro">
                   <h1 className="text-[20px] xl:text-4xl  font-bold mb-2 xl:mb-5 leading-tight">
-                    {coach ? `${coach.firstName} ${coach.lastName}` : "Тренер"}
+                    {coach ? `${coach.firstName} ${coach.lastName}` : t.coach}
                   </h1>
                   <p className="text-[14px] xl:text-2xl  font-normal opacity-90 leading-tight">
-                    Персональный тренер
+                    {t.coach}
                   </p>
                 </div>
               </div>
@@ -659,7 +776,7 @@ export default function TrainerBooking() {
               disabled={isNextButtonDisabled}
               onClick={() => setShowPersonalDataForm(true)}
             >
-              Далее
+              {t.continue}
             </Button>
           </div>
         </div>
@@ -688,10 +805,10 @@ export default function TrainerBooking() {
             {/* Title */}
             <div className="text-center xl:mb-[60px] mb-8">
               <h1 className="xl:text-[66px] text-[32px] font-bold text-content-primary xl:mb-5 mb-3">
-                Упс, ошибка
+                {t.errorScreen.title}
               </h1>
               <p className="xl:text-[38px] text-[18px] text-content-secondary">
-                Произошла ошибка, попробуйтезаписаться заново
+                {t.errorScreen.message}
               </p>
             </div>
 
@@ -709,7 +826,7 @@ export default function TrainerBooking() {
                   setPhone("");
                 }}
               >
-                На главную
+                {t.toMain}
               </Button>
             </div>
           </div>
@@ -722,10 +839,10 @@ export default function TrainerBooking() {
             {/* Title */}
             <div className="xl:mb-14 mb-8">
               <h1 className="xl:text-[56px] text-[28px] font-bold text-content-primary xl:mb-5 mb-3">
-                Введите свои данные
+                {t.form.title}
               </h1>
               <p className="xl:text-[32px] text-[16px] text-content-secondary">
-                Данные необходимы для обратной связи тренера с Вами
+                {t.form.subtitle}
               </p>
             </div>
 
@@ -733,7 +850,7 @@ export default function TrainerBooking() {
             <div className="space-y-2 xl:space-y-5">
               <Input
                 type="text"
-                placeholder="Имя"
+                placeholder={t.form.firstName}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 className="bg-[#F6F7FA] w-full xl:h-[134px] h-[56px] xl:text-[32px] text-[16px] xl:px-8 px-6 rounded-[16px] xl:rounded-[40px] focus:border-accent-primary"
@@ -741,7 +858,7 @@ export default function TrainerBooking() {
 
               <Input
                 type="text"
-                placeholder="Фамилия"
+                placeholder={t.form.lastName}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 className="bg-[#F6F7FA] w-full xl:h-[134px] h-[56px] xl:text-[32px] text-[16px] xl:px-8 px-6 rounded-[16px] xl:rounded-[40px] focus:border-accent-primary"
@@ -749,9 +866,9 @@ export default function TrainerBooking() {
 
               <Input
                 type="tel"
-                placeholder="+79999999999"
+                placeholder={t.form.phonePlaceholder}
                 value={phone}
-                maxLength={12}
+                maxLength={phoneMinLength}
                 onChange={(e) => {
                   const value = e.target.value;
                   // Allow only digits and + at the beginning
@@ -763,23 +880,24 @@ export default function TrainerBooking() {
                     return;
                   }
 
-                  // If starts with +7, keep +7 and only digits after
-                  if (filteredValue.startsWith('+7')) {
-                    const afterPlus7 = filteredValue.substring(2).replace(/[^\d]/g, '');
-                    setPhone('+7' + afterPlus7);
+                  const prefixLen = phonePrefix.length;
+
+                  // If starts with phonePrefix, keep it and only digits after
+                  if (filteredValue.startsWith(phonePrefix)) {
+                    const afterPrefix = filteredValue.substring(prefixLen).replace(/[^\d]/g, '');
+                    setPhone(phonePrefix + afterPrefix);
                   }
-                  // If starts with + but not +7, allow it (user might be typing +7)
+                  // If starts with + but not phonePrefix, reset or adjust
                   else if (filteredValue.startsWith('+')) {
-                    // Keep the + and only digits after
                     const afterPlus = filteredValue.substring(1).replace(/[^\d]/g, '');
-                    setPhone('+' + afterPlus);
+                    setPhone(phonePrefix + afterPlus);
                   }
-                  // If starts with digits and no +, add +7
+                  // If starts with digits and no +, add phonePrefix
                   else if (/^\d/.test(filteredValue)) {
                     const digitsOnly = filteredValue.replace(/\+/g, '');
-                    setPhone('+7' + digitsOnly);
+                    setPhone(phonePrefix + digitsOnly);
                   }
-                  // Otherwise, keep as is (shouldn't happen with our filtering)
+                  // Otherwise, keep as is
                   else {
                     setPhone(filteredValue);
                   }
@@ -793,9 +911,9 @@ export default function TrainerBooking() {
               <Button
                 className="w-full xl:h-[116px] h-[48px] xl:text-[32px] text-[16px] font-semibold rounded-[16px] xl:rounded-[40px] bg-accent-primary hover:bg-accent-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                 size="lg"
-                disabled={phone.length < 12}
+                disabled={phone.length < phoneMinLength}
                 onClick={async () => {
-                  if (phone.length < 12) {
+                  if (phone.length < phoneMinLength) {
                     setShowErrorScreen(true);
                     return;
                   }
@@ -812,7 +930,7 @@ export default function TrainerBooking() {
                   // ПРОВЕРИТЕ selectedSlotId
                   const selectedSlot = timeSlots.find(slot => slot.id === selectedTimeSlotId);
                   if (!selectedSlot) {
-                    alert('Выберите время');
+                    alert(t.form.phone); // or better error
                     return;
                   }
 
@@ -820,8 +938,8 @@ export default function TrainerBooking() {
                   const fullDateTime = new Date(`${selectedDate}T${selectedSlot.time}:00.000Z`).toISOString();
 
                   // ПАРСИМ duration И price ИЗ ВЫБРАННОЙ УСЛУГИ
-                  const duration = parseInt(selectedService.duration.replace(/ мин$/, '')) || 60;
-                  const price = parseInt(selectedService.price.replace(/[₽\s]/g, '')) || 0;
+                  const duration = parseInt(selectedService.duration.replace(/[^0-9]/g, '')) || 60;
+                  const price = parseInt(selectedService.price.replace(/[^0-9]/g, '')) || 0;
 
                   // ПОЛНЫЙ REQUEST BODY
                   const requestBody = {
@@ -843,7 +961,7 @@ export default function TrainerBooking() {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
-                        'Content-Language': 'ru',
+                        'Content-Language': selectedLanguage === 'Eng' ? 'en' : selectedLanguage === 'Ukr' ? 'uk' : 'ru',
                       },
                       body: JSON.stringify(requestBody),
                     });
@@ -869,7 +987,7 @@ export default function TrainerBooking() {
                   }
                 }}
               >
-                Далее
+                {t.form.submit}
               </Button>
             </div>
           </div>
@@ -892,9 +1010,9 @@ export default function TrainerBooking() {
                 <path
                   d="M177.574 81.2769L103.181 155.67L69.3657 121.855"
                   stroke="white"
-                  stroke-width="18.4971"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="18.4971"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             </div>
@@ -902,17 +1020,17 @@ export default function TrainerBooking() {
             {/* Title */}
             <div className="text-center xl:mb-[60px] mb-8">
               <h1 className="xl:text-[66px] text-[32px] font-bold text-content-primary xl:mb-5 mb-3">
-                Отлично
+                {t.success.title}
               </h1>
               <p className="xl:text-[38px] text-[18px] text-content-secondary">
-                Вы успешно записались!
+                {t.success.message}
               </p>
             </div>
 
             {/* Information Block */}
             <div className="xl:mb-12 mb-8">
               <h2 className="xl:text-[56px] text-[28px] font-semibold text-content-primary xl:mb-4 mb-3">
-                Информация
+                {t.success.info}
               </h2>
               <div className="">
                 {/* Info Item 1 - Тренер */}
@@ -937,18 +1055,18 @@ export default function TrainerBooking() {
                       <path
                         d="M27.6001 67.5666C33.0503 61.7859 40.4498 58.2332 48.6001 58.2332C56.7504 58.2332 64.1499 61.7859 69.6001 67.5666M59.1001 38.3999C59.1001 44.1989 54.3991 48.8999 48.6001 48.8999C42.8011 48.8999 38.1001 44.1989 38.1001 38.3999C38.1001 32.6009 42.8011 27.8999 48.6001 27.8999C54.3991 27.8999 59.1001 32.6009 59.1001 38.3999Z"
                         stroke="#0047ED"
-                        stroke-width="4.66667"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="4.66667"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
                   </div>
                   <div>
                     <h3 className="xl:text-[36px] text-[16px] xl:mb-2 mb-1 text-[#9A9B9D]">
-                      Тренер
+                      {t.success.trainer}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {coach ? `${coach.firstName} ${coach.lastName}` : "Неизвестно"}
+                      {coach ? `${coach.firstName} ${coach.lastName}` : t.success.unknown}
                     </p>
                   </div>
                 </div>
@@ -975,25 +1093,25 @@ export default function TrainerBooking() {
                       <path
                         d="M48.6003 51.2333C52.4663 51.2333 55.6003 48.0993 55.6003 44.2333C55.6003 40.3673 52.4663 37.2333 48.6003 37.2333C44.7343 37.2333 41.6003 40.3673 41.6003 44.2333C41.6003 48.0993 44.7343 51.2333 48.6003 51.2333Z"
                         stroke="#0047ED"
-                        stroke-width="4.66667"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="4.66667"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                       <path
                         d="M48.6003 72.2333C57.9336 62.9 67.2669 54.5426 67.2669 44.2333C67.2669 33.924 58.9096 25.5667 48.6003 25.5667C38.2909 25.5667 29.9336 33.924 29.9336 44.2333C29.9336 54.5426 39.2669 62.9 48.6003 72.2333Z"
                         stroke="#0047ED"
-                        stroke-width="4.66667"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="4.66667"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
                   </div>
                   <div>
                     <h3 className="xl:text-[36px] text-[16px] xl:mb-2 mb-1 text-[#9A9B9D]">
-                      Локация
+                      {t.success.location}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {selectedLocation?.name || "Неизвестно"}
+                      {selectedLocation?.name || t.success.unknown}
                     </p>
                     <h4 className="xl:text-[28px] text-[12px] text-[#9A9B9D]">
                       {selectedLocation?.address || ""}
@@ -1023,18 +1141,18 @@ export default function TrainerBooking() {
                       <path
                         d="M70.0909 57.1764C68.6065 60.6868 66.2847 63.7802 63.3286 66.1861C60.3725 68.5919 56.872 70.237 53.1332 70.9775C49.3945 71.718 45.5312 71.5314 41.8812 70.4339C38.2312 69.3364 34.9057 67.3615 32.1953 64.6819C29.4848 62.0022 27.4721 58.6995 26.333 55.0622C25.1939 51.425 24.9632 47.5642 25.6609 43.8172C26.3587 40.0702 27.9637 36.5512 30.3356 33.5678C32.7076 30.5844 35.7743 28.2274 39.2675 26.703M70.1581 39.1704C71.0922 41.4255 71.6651 43.8095 71.8596 46.235C71.9076 46.8342 71.9316 47.1338 71.8127 47.4037C71.7133 47.6291 71.5164 47.8424 71.2996 47.9595C71.0401 48.0997 70.7159 48.0997 70.0675 48.0997H50.4675C49.8142 48.0997 49.4875 48.0997 49.2379 47.9725C49.0184 47.8607 48.8399 47.6822 48.728 47.4627C48.6009 47.2131 48.6009 46.8864 48.6009 46.233V26.633C48.6009 25.9847 48.6009 25.6605 48.741 25.401C48.8581 25.1842 49.0715 24.9873 49.2969 24.8879C49.5668 24.7689 49.8664 24.7929 50.4656 24.841C52.891 25.0354 55.2751 25.6084 57.5302 26.5425C60.3611 27.7151 62.9333 29.4338 65.1 31.6005C67.2667 33.7672 68.9855 36.3395 70.1581 39.1704Z"
                         stroke="#0047ED"
-                        stroke-width="4.66667"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="4.66667"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
                   </div>
                   <div>
                     <h3 className="xl:text-[36px] text-[16px] xl:mb-2 mb-1 text-[#9A9B9D]">
-                      Услуга
+                      {t.success.service}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {selectedService?.name || "Неизвестно"}
+                      {selectedService?.name || t.success.unknown}
                     </p>
                   </div>
                 </div>
@@ -1061,25 +1179,25 @@ export default function TrainerBooking() {
                       <path
                         d="M48.5999 34.0999V48.0999L57.9333 52.7666M71.9333 48.0999C71.9333 60.9866 61.4866 71.4333 48.5999 71.4333C35.7133 71.4333 25.2666 60.9866 25.2666 48.0999C25.2666 35.2133 35.7133 24.7666 48.5999 24.7666C61.4866 24.7666 71.9333 35.2133 71.9333 48.0999Z"
                         stroke="#0047ED"
-                        stroke-width="4.66667"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="4.66667"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
                   </div>
                   <div>
                     <h3 className="xl:text-[36px] text-[16px] xl:mb-2 mb-1 text-[#9A9B9D]">
-                      Время
+                      {t.success.time}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
                       {selectedTimeSlot?.time ? `${selectedTimeSlot.time} - ${(() => {
                         const [hours, minutes] = selectedTimeSlot.time.split(':').map(Number);
-                        const durationMin = parseInt(selectedService?.duration.replace(/ мин$/, '')) || 60;
+                        const durationMin = parseInt(selectedService?.duration.replace(/[^0-9]/g, '')) || 60;
                         const endHours = hours + Math.floor((minutes + durationMin) / 60);
                         const endMinutes = (minutes + durationMin) % 60;
                         return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
                       })()
-                        }` : "Неизвестно"}
+                        }` : t.success.unknown}
                     </p>
                   </div>
                 </div>
@@ -1106,18 +1224,18 @@ export default function TrainerBooking() {
                       <path
                         d="M50.9333 31.7668C50.9333 34.3441 45.1876 36.4334 38.0999 36.4334C31.0123 36.4334 25.2666 34.3441 25.2666 31.7668M50.9333 31.7668C50.9333 29.1894 45.1876 27.1001 38.0999 27.1001C31.0123 27.1001 25.2666 29.1894 25.2666 31.7668M50.9333 31.7668V35.2668M25.2666 31.7668V59.7668C25.2666 62.3441 31.0123 64.4334 38.0999 64.4334M38.0999 45.7668C37.7067 45.7668 37.3175 45.7603 36.9333 45.7477C30.3924 45.5334 25.2666 43.5344 25.2666 41.1001M38.0999 55.1001C31.0123 55.1001 25.2666 53.0108 25.2666 50.4334M71.9333 46.9334C71.9333 49.5108 66.1876 51.6001 59.0999 51.6001C52.0123 51.6001 46.2666 49.5108 46.2666 46.9334M71.9333 46.9334C71.9333 44.3561 66.1876 42.2668 59.0999 42.2668C52.0123 42.2668 46.2666 44.3561 46.2666 46.9334M71.9333 46.9334V64.4334C71.9333 67.0108 66.1876 69.1001 59.0999 69.1001C52.0123 69.1001 46.2666 67.0108 46.2666 64.4334V46.9334M71.9333 55.6834C71.9333 58.2608 66.1876 60.3501 59.0999 60.3501C52.0123 60.3501 46.2666 58.2608 46.2666 55.6834"
                         stroke="#0047ED"
-                        stroke-width="4.66667"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="4.66667"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     </svg>
                   </div>
                   <div>
                     <h3 className="xl:text-[36px] text-[16px] xl:mb-2 mb-1 text-[#9A9B9D]">
-                      Цена
+                      {t.success.price}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {selectedService?.price || "Неизвестно"}
+                      {selectedService?.price || t.success.unknown}
                     </p>
                   </div>
                 </div>
@@ -1137,7 +1255,7 @@ export default function TrainerBooking() {
                   setPhone("");
                 }}
               >
-                На главную
+                {t.toMain}
               </Button>
             </div>
           </div>
@@ -1488,6 +1606,8 @@ function DateTimeSection({
     return `${t.monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
   };
 
+  const numRows = Math.ceil(timeSlots.length / 4);
+
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <Card
@@ -1606,7 +1726,7 @@ function DateTimeSection({
             </div>
             <div className="h-0.5 bg-gray-300 mb-8" />
             <div className="xl:space-y-7 space-y-4">
-              {Array.from({ length: 4 }, (_, rowIndex) => (
+              {Array.from({ length: numRows }, (_, rowIndex) => (
                 <div key={rowIndex} className="grid grid-cols-4 xl:gap-8 gap-4">
                   {timeSlots
                     .slice(rowIndex * 4, (rowIndex + 1) * 4)
