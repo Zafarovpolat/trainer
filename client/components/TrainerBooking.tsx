@@ -37,6 +37,7 @@ const translations = {
       "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
     ],
     noSlots: "Нет свободных слотов",
+    selectFirst: "Сначала выберите локацию и услугу",
     errorMessages: {
       noLinkCode: "Отсутствует код ссылки для тренера",
       coachNotFound: "Тренер не найден. Проверьте ссылку.",
@@ -87,6 +88,7 @@ const translations = {
       "July", "August", "September", "October", "November", "December"
     ],
     noSlots: "No available slots",
+    selectFirst: "Select location and service first",
     errorMessages: {
       noLinkCode: "Trainer link code is missing",
       coachNotFound: "Trainer not found. Check the link.",
@@ -137,6 +139,7 @@ const translations = {
       "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
     ],
     noSlots: "Немає вільних слотів",
+    selectFirst: "Спочатку оберіть локацію та послугу",
     errorMessages: {
       noLinkCode: "Відсутній код посилання для тренера",
       coachNotFound: "Тренера не знайдено. Перевірте посилання.",
@@ -365,6 +368,20 @@ export default function TrainerBooking() {
   });
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
 
+  const resetSelections = () => {
+    setLocations((prev) => prev.map((l) => ({ ...l, selected: false })));
+    setServices((prev) => prev.map((s) => ({ ...s, selected: false })));
+    setTimeSlots((prev) => prev.map((s) => ({ ...s, selected: false })));
+    setSelectedLocationId("");
+    setSelectedServiceId("");
+    setSelectedTimeSlotId("");
+    const today = new Date();
+    setSelectedDate(today.toISOString().split("T")[0]);
+    setIsServicesOpen(false);
+    setIsDateTimeOpen(false);
+    setTimeSlots([]);
+  };
+
   const toggleService = (id: string) => {
     setServices(
       services.map((service) =>
@@ -374,6 +391,7 @@ export default function TrainerBooking() {
       ),
     );
     setSelectedServiceId(id);
+    setIsDateTimeOpen(true);
   };
 
   const selectLocation = (id: string) => {
@@ -384,6 +402,7 @@ export default function TrainerBooking() {
       })),
     );
     setSelectedLocationId(id);
+    setIsServicesOpen(true);
   };
 
   const selectTimeSlot = (id: string) => {
@@ -461,6 +480,7 @@ export default function TrainerBooking() {
 
         if (transformedLocations.length === 1) {
           setSelectedLocationId(transformedLocations[0].id);
+          setIsServicesOpen(true);
         }
       } catch (err) {
         setErrorMessage(t.errorMessages.locationsError);
@@ -501,6 +521,7 @@ export default function TrainerBooking() {
         setServices(transformedServices);
         if (transformedServices.length === 1) {
           setSelectedServiceId(transformedServices[0].id);
+          setIsDateTimeOpen(true);
         }
       } catch (err) {
         setErrorMessage(t.errorMessages.servicesError);
@@ -731,9 +752,6 @@ export default function TrainerBooking() {
                   <h1 className="text-[20px] xl:text-4xl  font-bold mb-2 xl:mb-5 leading-tight">
                     {coach ? `${coach.firstName} ${coach.lastName}` : t.coach}
                   </h1>
-                  <p className="text-[14px] xl:text-2xl  font-normal opacity-90 leading-tight">
-                    {t.coach}
-                  </p>
                 </div>
               </div>
             </div>
@@ -767,6 +785,8 @@ export default function TrainerBooking() {
             timeSlots={timeSlots}
             onSelectDate={setSelectedDate}
             onSelectTimeSlot={selectTimeSlot}
+            selectedLocationId={selectedLocationId}
+            selectedServiceId={selectedServiceId}
             isOpen={isDateTimeOpen}
             onToggle={() => setIsDateTimeOpen(!isDateTimeOpen)}
           />
@@ -827,6 +847,7 @@ export default function TrainerBooking() {
                   setFirstName("");
                   setLastName("");
                   setPhone("");
+                  resetSelections();
                 }}
               >
                 {t.toMain}
@@ -981,9 +1002,7 @@ export default function TrainerBooking() {
                     setFirstName('');
                     setLastName('');
                     setPhone('');
-                    setSelectedLocationId('');
-                    setSelectedServiceId('');
-                    setSelectedTimeSlotId('');
+                    resetSelections();
                   } catch (err) {
                     setErrorMessage(err.message);
                     setShowErrorScreen(true);
@@ -1256,6 +1275,7 @@ export default function TrainerBooking() {
                   setFirstName("");
                   setLastName("");
                   setPhone("");
+                  resetSelections();
                 }}
               >
                 {t.toMain}
@@ -1535,6 +1555,8 @@ function DateTimeSection({
   timeSlots,
   onSelectDate,
   onSelectTimeSlot,
+  selectedLocationId,
+  selectedServiceId,
   isOpen,
   onToggle,
   t, // Добавляем пропс t
@@ -1543,6 +1565,8 @@ function DateTimeSection({
   timeSlots: TimeSlot[];
   onSelectDate: (date: string) => void;
   onSelectTimeSlot: (id: string) => void;
+  selectedLocationId: string;
+  selectedServiceId: string;
   isOpen: boolean;
   onToggle: () => void;
   t: typeof translations['Rus']; // Тип для словаря переводов
@@ -1555,6 +1579,15 @@ function DateTimeSection({
     monday.setDate(today.getDate() + mondayOffset);
     return monday;
   });
+
+  useEffect(() => {
+    const date = new Date(selectedDate);
+    const dayOfWeek = date.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + mondayOffset);
+    setCurrentWeekStart(monday);
+  }, [selectedDate]);
 
   const getWeekDays = (weekStart: Date) => {
     const days = [];
@@ -1604,12 +1637,19 @@ function DateTimeSection({
 
   const weekDaysData = getWeekDays(currentWeekStart);
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const formatMonthYear = (weekStart: Date) => {
     return `${t.monthNames[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
   };
 
   const numRows = Math.ceil(timeSlots.length / 4);
+
+  const handleDateSelect = (index: number) => {
+    const day = weekDaysData[index].fullDate;
+    if (day < today) return;
+    onSelectDate(day.toISOString().split("T")[0]);
+  };
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
@@ -1699,32 +1739,33 @@ function DateTimeSection({
                 </div>
               </div>
               <div className="grid grid-cols-7 xl:gap-4 gap-2">
-                {t.weekDays.map((day, index) => (
-                  <div key={day} className="text-center">
-                    <div className="text-content-secondary xl:text-[28px] text-[12px] xl:mb-8 mb-4">
-                      {day}
+                {t.weekDays.map((day, index) => {
+                  const dayFullDate = weekDaysData[index].fullDate;
+                  const isPast = dayFullDate < today;
+                  const isSelected = selectedDate === dayFullDate.toISOString().split("T")[0];
+                  const isToday = dayFullDate.toDateString() === today.toDateString();
+                  return (
+                    <div key={day} className="text-center">
+                      <div className="text-content-secondary xl:text-[28px] text-[12px] xl:mb-8 mb-4">
+                        {day}
+                      </div>
+                      <button
+                        onClick={() => handleDateSelect(index)}
+                        disabled={isPast}
+                        className={`xl:w-20 w-8 xl:h-20 h-8 rounded-full xl:text-[48px] text-[20px] font-medium transition-colors ${isSelected
+                            ? "bg-accent-primary text-white"
+                            : isToday
+                              ? "bg-accent-secondary text-white"
+                              : isPast
+                                ? "text-content-secondary opacity-50 cursor-not-allowed"
+                                : "text-content-primary hover:bg-gray-100"
+                          } ${isPast ? "cursor-not-allowed" : ""}`}
+                      >
+                        {weekDaysData[index].date}
+                      </button>
                     </div>
-                    <button
-                      onClick={() =>
-                        onSelectDate(
-                          weekDaysData[index].fullDate
-                            .toISOString()
-                            .split("T")[0],
-                        )
-                      }
-                      className={`xl:w-20 w-8 xl:h-20 h-8 rounded-full xl:text-[48px] text-[20px] font-medium transition-colors ${selectedDate ===
-                        weekDaysData[index].fullDate.toISOString().split("T")[0]
-                        ? "bg-accent-primary text-white"
-                        : weekDaysData[index].fullDate.toDateString() ===
-                          today.toDateString()
-                          ? "bg-accent-secondary text-white"
-                          : "text-content-primary hover:bg-gray-100"
-                        }`}
-                    >
-                      {weekDaysData[index].date}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
             <div className="h-0.5 bg-gray-300 mb-8" />
@@ -1752,9 +1793,13 @@ function DateTimeSection({
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : selectedLocationId && selectedServiceId ? (
               <div className="text-center py-8">
                 <span className="text-content-secondary xl:text-[32px] text-[16px]">{t.noSlots}</span>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <span className="text-content-secondary xl:text-[32px] text-[16px]">{t.selectFirst}</span>
               </div>
             )}
           </div>
