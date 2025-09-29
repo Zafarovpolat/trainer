@@ -36,6 +36,7 @@ const translations = {
       "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
       "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
     ],
+    noSlots: "Нет свободных слотов",
     errorMessages: {
       noLinkCode: "Отсутствует код ссылки для тренера",
       coachNotFound: "Тренер не найден. Проверьте ссылку.",
@@ -85,6 +86,7 @@ const translations = {
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
     ],
+    noSlots: "No available slots",
     errorMessages: {
       noLinkCode: "Trainer link code is missing",
       coachNotFound: "Trainer not found. Check the link.",
@@ -134,6 +136,7 @@ const translations = {
       "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
       "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
     ],
+    noSlots: "Немає вільних слотів",
     errorMessages: {
       noLinkCode: "Відсутній код посилання для тренера",
       coachNotFound: "Тренера не знайдено. Перевірте посилання.",
@@ -366,8 +369,8 @@ export default function TrainerBooking() {
     setServices(
       services.map((service) =>
         service.id === id
-          ? { ...service, selected: !service.selected }
-          : service,
+          ? { ...service, selected: true }
+          : { ...service, selected: false },
       ),
     );
     setSelectedServiceId(id);
@@ -1725,29 +1728,35 @@ function DateTimeSection({
               </div>
             </div>
             <div className="h-0.5 bg-gray-300 mb-8" />
-            <div className="xl:space-y-7 space-y-4">
-              {Array.from({ length: numRows }, (_, rowIndex) => (
-                <div key={rowIndex} className="grid grid-cols-4 xl:gap-8 gap-4">
-                  {timeSlots
-                    .slice(rowIndex * 4, (rowIndex + 1) * 4)
-                    .map((slot) => (
-                      <button
-                        key={slot.id}
-                        onClick={() => onSelectTimeSlot(slot.id)}
-                        disabled={!slot.available}
-                        className={`xl:px-10 h-[36px] xl:py-[18px] sm:h-[50px] xl:h-[90px] rounded-full xl:text-[32px] text-[16px] font-medium transition-colors ${slot.selected
-                          ? "bg-accent-primary text-white"
-                          : slot.available
-                            ? "bg-white border border-gray-200 text-content-secondary hover:bg-gray-50"
-                            : "bg-white border border-gray-200 text-content-secondary opacity-50 cursor-not-allowed"
-                          }`}
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
-                </div>
-              ))}
-            </div>
+            {timeSlots.length > 0 ? (
+              <div className="xl:space-y-7 space-y-4">
+                {Array.from({ length: numRows }, (_, rowIndex) => (
+                  <div key={rowIndex} className="grid grid-cols-4 xl:gap-8 gap-4">
+                    {timeSlots
+                      .slice(rowIndex * 4, (rowIndex + 1) * 4)
+                      .map((slot) => (
+                        <button
+                          key={slot.id}
+                          onClick={() => onSelectTimeSlot(slot.id)}
+                          disabled={!slot.available}
+                          className={`xl:px-10 h-[36px] xl:py-[18px] sm:h-[50px] xl:h-[90px] rounded-full xl:text-[32px] text-[16px] font-medium transition-colors ${slot.selected
+                            ? "bg-accent-primary text-white"
+                            : slot.available
+                              ? "bg-white border border-gray-200 text-content-secondary hover:bg-gray-50"
+                              : "bg-white border border-gray-200 text-content-secondary opacity-50 cursor-not-allowed"
+                            }`}
+                        >
+                          {slot.time}
+                        </button>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <span className="text-content-secondary xl:text-[32px] text-[16px]">{t.noSlots}</span>
+              </div>
+            )}
           </div>
         </CollapsibleContent>
       </Card>
