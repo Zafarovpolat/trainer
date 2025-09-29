@@ -380,6 +380,22 @@ export default function TrainerBooking() {
     setIsServicesOpen(false);
     setIsDateTimeOpen(false);
     setTimeSlots([]);
+
+    // Auto-select single location if exists
+    if (locations.length === 1) {
+      const singleLoc = locations[0];
+      setLocations(prev => prev.map(l => ({ ...l, selected: l.id === singleLoc.id })));
+      setSelectedLocationId(singleLoc.id);
+      setIsServicesOpen(true);
+    }
+
+    // Auto-select single service if exists
+    if (services.length === 1) {
+      const singleSvc = services[0];
+      setServices(prev => prev.map(s => ({ ...s, selected: s.id === singleSvc.id })));
+      setSelectedServiceId(singleSvc.id);
+      setIsDateTimeOpen(true);
+    }
   };
 
   const toggleService = (id: string) => {
@@ -1753,12 +1769,12 @@ function DateTimeSection({
                         onClick={() => handleDateSelect(index)}
                         disabled={isPast}
                         className={`xl:w-20 w-8 xl:h-20 h-8 rounded-full xl:text-[48px] text-[20px] font-medium transition-colors ${isSelected
-                            ? "bg-accent-primary text-white"
-                            : isToday
-                              ? "bg-accent-secondary text-white"
-                              : isPast
-                                ? "text-content-secondary opacity-50 cursor-not-allowed"
-                                : "text-content-primary hover:bg-gray-100"
+                          ? "bg-accent-primary text-white"
+                          : isToday
+                            ? "bg-accent-secondary text-white"
+                            : isPast
+                              ? "text-content-secondary opacity-50 cursor-not-allowed"
+                              : "text-content-primary hover:bg-gray-100"
                           } ${isPast ? "cursor-not-allowed" : ""}`}
                       >
                         {weekDaysData[index].date}
