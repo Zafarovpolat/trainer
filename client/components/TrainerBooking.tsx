@@ -228,6 +228,13 @@ export default function TrainerBooking() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
 
+  const [successData, setSuccessData] = useState<{
+    location?: LocationOption;
+    service?: ServiceOption;
+    timeSlot?: TimeSlot;
+    fullTimeRange?: string;  // Готовый диапазон времени для отображения
+  } | null>(null);
+
   const t = translations[selectedLanguage]; // Текущие переводы
 
   const phonePrefix = selectedLanguage === 'Eng' ? '+1' : selectedLanguage === 'Ukr' ? '+380' : '+7';
@@ -1014,6 +1021,25 @@ export default function TrainerBooking() {
                     const data = await response.json();
                     setShowSuccessScreen(true);
 
+                    const selectedLoc = locations.find(loc => loc.selected);
+                    const selectedSvc = services.find(svc => svc.selected);
+                    const selectedSlot = timeSlots.find(slot => slot.selected);
+
+                    if (selectedLoc && selectedSvc && selectedSlot) {
+                      const [hours, minutes] = selectedSlot.time.split(':').map(Number);
+                      const durationMin = parseInt(selectedSvc.duration.replace(/[^0-9]/g, '')) || 60;
+                      const endHours = hours + Math.floor((minutes + durationMin) / 60);
+                      const endMinutes = (minutes + durationMin) % 60;
+                      const fullTimeRange = `${selectedSlot.time} - ${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+
+                      setSuccessData({
+                        location: selectedLoc,
+                        service: selectedSvc,
+                        timeSlot: selectedSlot,
+                        fullTimeRange,
+                      });
+                    }
+
                     // Сброс формы
                     setFirstName('');
                     setLastName('');
@@ -1190,7 +1216,7 @@ export default function TrainerBooking() {
                       {t.success.service}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {selectedService?.name || t.success.unknown}
+                      {successData?.service?.name || t.success.unknown}
                     </p>
                   </div>
                 </div>
@@ -1228,14 +1254,7 @@ export default function TrainerBooking() {
                       {t.success.time}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {selectedTimeSlot?.time ? `${selectedTimeSlot.time} - ${(() => {
-                        const [hours, minutes] = selectedTimeSlot.time.split(':').map(Number);
-                        const durationMin = parseInt(selectedService?.duration.replace(/[^0-9]/g, '')) || 60;
-                        const endHours = hours + Math.floor((minutes + durationMin) / 60);
-                        const endMinutes = (minutes + durationMin) % 60;
-                        return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-                      })()
-                        }` : t.success.unknown}
+                      {successData?.fullTimeRange || t.success.unknown}
                     </p>
                   </div>
                 </div>
@@ -1273,7 +1292,7 @@ export default function TrainerBooking() {
                       {t.success.price}
                     </h3>
                     <p className="xl:text-[36px] text-[16px] text-[#1C1E24]">
-                      {selectedService?.price || t.success.unknown}
+                      {successData?.service?.price || t.success.unknown}
                     </p>
                   </div>
                 </div>
