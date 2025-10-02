@@ -650,7 +650,7 @@ export default function TrainerBooking() {
   if (errorMessage && !coach) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center xl:p-8 p-4">
-        <div className="max-w-[823px] w-full text-center">
+        <div className="max-w-[650px] xl:max-w-[823px] w-full text-center">
           <h1 className="xl:text-[66px] text-[32px] font-bold text-content-primary xl:mb-5 mb-3">
             {t.error}
           </h1>
@@ -676,7 +676,7 @@ export default function TrainerBooking() {
           {/* Header with trainer info */}
           <div className="relative min-h-[242px] xl:min-h-[580px] overflow-hidden">
             {/* Background gradient */}
-            <div className="max-w-[1440px] m-auto">
+            <div className="max-w-[682px] xl:max-w-[1440px] m-auto">
               <div
                 className="absolute inset-0 bg-gradient-to-b from-accent-primary to-accent-secondary"
                 style={{
@@ -697,7 +697,7 @@ export default function TrainerBooking() {
                 className="absolute -top-[30px] xl:top-2 object-contain -right-[50px] xl:right-0 w-[180px] h-[280px] xl:w-[424px] xl:h-[580px]"
               />
 
-              <div className="wrapper min-h-[242px] xl:min-h-[580px] relative mx-auto w-[calc(100%-32px)] xl:w-[calc(100%-240px)] xl:px-0">
+              <div className="wrapper min-h-[242px] xl:min-h-[580px] xl:mx-auto relative mx-4 max-w-[calc(682px)] xl:max-w-[calc(100%-240px)] xl:px-0">
                 {/* Language selector */}
                 <div className="absolute top-4 xl:top-10 right-0 max-w-[78px] xl:max-w-[190px] w-full">
                   <div className="relative">
@@ -784,7 +784,7 @@ export default function TrainerBooking() {
         </div>
       )}
       {!showPersonalDataForm ? (
-        <div className="max-w-[calc(100%-32px)] xl:max-w-[823px] mx-auto mt-4  xl:mt-8 relative z-10">
+        <div className="max-w-[682px] px-4 xl:px-0 xl:max-w-[1200px] mx-auto mt-4  xl:mt-8 relative z-10">
           <div className="max-w-[1440px] m-auto space-y-4 xl:space-y-8">
             {/* Location Section */}
             <LocationSection
