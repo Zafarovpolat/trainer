@@ -672,158 +672,162 @@ export default function TrainerBooking() {
   return (
     <div className="min-h-screen bg-background-primary">
       {!showPersonalDataForm && (
-        <>
+        <div>
           {/* Header with trainer info */}
           <div className="relative min-h-[242px] xl:min-h-[580px] overflow-hidden">
             {/* Background gradient */}
-            <div
-              className="absolute inset-0 bg-gradient-to-b from-accent-primary to-accent-secondary"
-              style={{
-                background:
-                  "linear-gradient(180deg, #0047ED 36.15%, #002887 147.81%)",
-              }}
-            />
+            <div className="max-w-[1440px] m-auto">
+              <div
+                className="absolute inset-0 bg-gradient-to-b from-accent-primary to-accent-secondary"
+                style={{
+                  background:
+                    "linear-gradient(180deg, #0047ED 36.15%, #002887 147.81%)",
+                }}
+              />
 
-            {/* Background decorative images */}
-            <img
-              src="./left.png"
-              alt=""
-              className="absolute transform -left-[40px] -top-[20px] xl:top-0 xl:left-0 w-[210px] h-[280px] xl:w-[475px] xl:h-[580px]"
-            />
-            <img
-              src="./right.png"
-              alt=""
-              className="absolute -top-[30px] xl:top-2 object-contain -right-[50px] xl:right-0 w-[180px] h-[280px] xl:w-[424px] xl:h-[580px]"
-            />
+              {/* Background decorative images */}
+              <img
+                src="./left.png"
+                alt=""
+                className="absolute transform -left-[40px] -top-[20px] xl:top-0 xl:left-0 w-[210px] h-[280px] xl:w-[475px] xl:h-[580px]"
+              />
+              <img
+                src="./right.png"
+                alt=""
+                className="absolute -top-[30px] xl:top-2 object-contain -right-[50px] xl:right-0 w-[180px] h-[280px] xl:w-[424px] xl:h-[580px]"
+              />
 
-            <div className="wrapper min-h-[242px] xl:min-h-[580px] relative mx-auto w-[calc(100%-32px)] xl:w-[calc(100%-240px)] xl:px-0">
-              {/* Language selector */}
-              <div className="absolute top-4 xl:top-10 right-0 max-w-[78px] xl:max-w-[190px] w-full">
-                <div className="relative">
-                  <div
-                    className="flex items-center gap-1 xl:gap-2 bg-gray-100 rounded-[12px] xl:rounded-3xl px-2 py-2 xl:px-5 xl:py-4 shadow-lg cursor-pointer"
-                    onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
-                  >
-                    <div className="xl:w-11 w-[18px] xl:h-11 h-[18px] rounded-full overflow-hidden flex-shrink-0">
-                      {
-                        languageOptions.find(
-                          (lang) => lang.code === selectedLanguage,
-                        )?.flag
-                      }
-                    </div>
-                    <span className="text-content-primary text-[14px] xl:text-[32px] font-medium">
-                      {selectedLanguage}
-                    </span>
-                    <svg
-                      className={`xl:w-8 w-3 xl:h-8 h-3 text-content-primary transition-transform ${isLanguageMenuOpen ? "rotate-180" : ""}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              <div className="wrapper min-h-[242px] xl:min-h-[580px] relative mx-auto w-[calc(100%-32px)] xl:w-[calc(100%-240px)] xl:px-0">
+                {/* Language selector */}
+                <div className="absolute top-4 xl:top-10 right-0 max-w-[78px] xl:max-w-[190px] w-full">
+                  <div className="relative">
+                    <div
+                      className="flex items-center gap-1 xl:gap-2 bg-gray-100 rounded-[12px] xl:rounded-3xl px-2 py-2 xl:px-5 xl:py-4 shadow-lg cursor-pointer"
+                      onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </div>
-                  {isLanguageMenuOpen && (
-                    <div className="absolute bg-gray-100 w-full rounded-b-[12px] xl:rounded-b-3xl px-2 xl:px-5 shadow-lg pt-2  xl:py-2 xl:min-w-[120px] top-[calc(100%-9px)] xl:top-[calc(100%-20px)] overflow-hidden">
-                      {languageOptions
-                        .filter((lang) => lang.code !== selectedLanguage)
-                        .map((lang) => (
-                          <div
-                            key={lang.code}
-                            className="flex items-center gap-1 xl:gap-3 py-2 xl:py-3 border-t-2 xl:border-t-4 border-white  cursor-pointer"
-                            onClick={() => {
-                              setSelectedLanguage(lang.code);
-                              setIsLanguageMenuOpen(false);
-                            }}
-                          >
-                            <div className="xl:w-11 w-[18px] xl:h-11 h-[18px] rounded-full overflow-hidden flex-shrink-0">
-                              {lang.flag}
-                            </div>
-                            <span className="text-content-primary text-[14px] xl:text-[32px] font-medium">
-                              {lang.name}
-                            </span>
-                          </div>
-                        ))}
+                      <div className="xl:w-11 w-[18px] xl:h-11 h-[18px] rounded-full overflow-hidden flex-shrink-0">
+                        {
+                          languageOptions.find(
+                            (lang) => lang.code === selectedLanguage,
+                          )?.flag
+                        }
+                      </div>
+                      <span className="text-content-primary text-[14px] xl:text-[32px] font-medium">
+                        {selectedLanguage}
+                      </span>
+                      <svg
+                        className={`xl:w-8 w-3 xl:h-8 h-3 text-content-primary transition-transform ${isLanguageMenuOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
                     </div>
-                  )}
+                    {isLanguageMenuOpen && (
+                      <div className="absolute bg-gray-100 w-full rounded-b-[12px] xl:rounded-b-3xl px-2 xl:px-5 shadow-lg pt-2  xl:py-2 xl:min-w-[120px] top-[calc(100%-9px)] xl:top-[calc(100%-20px)] overflow-hidden">
+                        {languageOptions
+                          .filter((lang) => lang.code !== selectedLanguage)
+                          .map((lang) => (
+                            <div
+                              key={lang.code}
+                              className="flex items-center gap-1 xl:gap-3 py-2 xl:py-3 border-t-2 xl:border-t-4 border-white  cursor-pointer"
+                              onClick={() => {
+                                setSelectedLanguage(lang.code);
+                                setIsLanguageMenuOpen(false);
+                              }}
+                            >
+                              <div className="xl:w-11 w-[18px] xl:h-11 h-[18px] rounded-full overflow-hidden flex-shrink-0">
+                                {lang.flag}
+                              </div>
+                              <span className="text-content-primary text-[14px] xl:text-[32px] font-medium">
+                                {lang.name}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Trainer info */}
-              <div className="absolute bottom-[10px] xl:bottom-[25px] left-0 flex items-center gap-4 xl:gap-8">
-                {/* Profile picture */}
-                <div className="xl:w-[168px] w-[70px] xl:h-[168px] h-[70px] rounded-full overflow-hidden flex-shrink-0">
-                  <img
-                    src={
-                      coach?.photo ||
-                      "./avatar.png"
-                    }
-                    alt={
-                      coach ? `${coach.firstName} ${coach.lastName}` : t.coach
-                    }
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                {/* Trainer info */}
+                <div className="absolute bottom-[10px] xl:bottom-[25px] left-0 flex items-center gap-4 xl:gap-8">
+                  {/* Profile picture */}
+                  <div className="xl:w-[168px] w-[70px] xl:h-[168px] h-[70px] rounded-full overflow-hidden flex-shrink-0">
+                    <img
+                      src={
+                        coach?.photo ||
+                        "./avatar.png"
+                      }
+                      alt={
+                        coach ? `${coach.firstName} ${coach.lastName}` : t.coach
+                      }
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                {/* Trainer details */}
-                <div className="text-white font-sf-pro">
-                  <h1 className="text-[20px] xl:text-4xl  font-bold mb-2 xl:mb-5 leading-tight">
-                    {coach ? `${coach.firstName} ${coach.lastName}` : t.coach}
-                  </h1>
+                  {/* Trainer details */}
+                  <div className="text-white font-sf-pro">
+                    <h1 className="text-[20px] xl:text-4xl  font-bold mb-2 xl:mb-5 leading-tight">
+                      {coach ? `${coach.firstName} ${coach.lastName}` : t.coach}
+                    </h1>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
       {!showPersonalDataForm ? (
-        <div className="max-w-[calc(100%-32px)] xl:max-w-[823px] mx-auto mt-4 space-y-4 xl:space-y-8 xl:mt-8 relative z-10">
-          {/* Location Section */}
-          <LocationSection
-            t={t}
-            locations={locations}
-            onSelectLocation={selectLocation}
-            isOpen={isLocationOpen}
-            onToggle={() => setIsLocationOpen(!isLocationOpen)}
-          />
+        <div className="max-w-[calc(100%-32px)] xl:max-w-[823px] mx-auto mt-4  xl:mt-8 relative z-10">
+          <div className="max-w-[1440px] m-auto space-y-4 xl:space-y-8">
+            {/* Location Section */}
+            <LocationSection
+              t={t}
+              locations={locations}
+              onSelectLocation={selectLocation}
+              isOpen={isLocationOpen}
+              onToggle={() => setIsLocationOpen(!isLocationOpen)}
+            />
 
-          {/* Services Section */}
-          <ServicesSection
-            t={t}
-            services={services}
-            onToggleService={toggleService}
-            isOpen={isServicesOpen}
-            onToggle={() => setIsServicesOpen(!isServicesOpen)}
-          />
+            {/* Services Section */}
+            <ServicesSection
+              t={t}
+              services={services}
+              onToggleService={toggleService}
+              isOpen={isServicesOpen}
+              onToggle={() => setIsServicesOpen(!isServicesOpen)}
+            />
 
-          {/* Date & Time Section */}
-          <DateTimeSection
-            t={t}
-            selectedDate={selectedDate}
-            timeSlots={timeSlots}
-            onSelectDate={setSelectedDate}
-            onSelectTimeSlot={selectTimeSlot}
-            selectedLocationId={selectedLocationId}
-            selectedServiceId={selectedServiceId}
-            isOpen={isDateTimeOpen}
-            onToggle={() => setIsDateTimeOpen(!isDateTimeOpen)}
-          />
+            {/* Date & Time Section */}
+            <DateTimeSection
+              t={t}
+              selectedDate={selectedDate}
+              timeSlots={timeSlots}
+              onSelectDate={setSelectedDate}
+              onSelectTimeSlot={selectTimeSlot}
+              selectedLocationId={selectedLocationId}
+              selectedServiceId={selectedServiceId}
+              isOpen={isDateTimeOpen}
+              onToggle={() => setIsDateTimeOpen(!isDateTimeOpen)}
+            />
 
-          {/* Continue Button */}
-          <div className="pb-20 xl:pb-40">
-            <Button
-              className="w-full xl:h-[116px] h-[48px] xl:text-[32px] text-[16px] font-semibold rounded-[16px] xl:rounded-[40px] bg-accent-primary hover:bg-accent-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-              size="lg"
-              disabled={isNextButtonDisabled}
-              onClick={() => setShowPersonalDataForm(true)}
-            >
-              {t.continue}
-            </Button>
+            {/* Continue Button */}
+            <div className="pb-20 xl:pb-40">
+              <Button
+                className="w-full xl:h-[116px] h-[48px] xl:text-[32px] text-[16px] font-semibold rounded-[16px] xl:rounded-[40px] bg-accent-primary hover:bg-accent-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                size="lg"
+                disabled={isNextButtonDisabled}
+                onClick={() => setShowPersonalDataForm(true)}
+              >
+                {t.continue}
+              </Button>
+            </div>
           </div>
         </div>
       ) : showErrorScreen ? (
